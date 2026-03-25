@@ -1,0 +1,263 @@
+{
+  "candidates": [
+    {
+      "candidate_id": "cand_20260324_114515_mohsen jedi job CV.p",
+      "filename": "mohsen jedi job CV.pdf.pdf (1).pdf",
+      "email": "jeddimohsen2@gmail.com",
+      "final_score": 56.3,
+      "job_id": "job_20260324_114515",
+      "job_title": "Data Analyst ",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "python",
+        "javascript",
+        "aws",
+        "machine learning",
+        "data analysis",
+        "backend"
+      ],
+      "missing_skills": [
+        "sql",
+        "cloud"
+      ],
+      "confidence_level": "Low",
+      "category": "longlist",
+      "added_date": "2026-03-24T11:45:15.206532",
+      "skill_proficiency": {
+        "python": "Intermediate",
+        "javascript": "Not Determined",
+        "aws": "Not Determined",
+        "machine learning": "Not Determined",
+        "data analysis": "Intermediate",
+        "backend": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 9.0,
+        "skills_match": 75.0,
+        "experience_relevance": 90,
+        "keyword_density": 100,
+        "culture_fit": 48,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260324_114515_CV Ehsan Khosravi.pd",
+      "filename": "CV Ehsan Khosravi.pdf",
+      "email": "ehsan.khosravi.8409@gmail.com",
+      "final_score": 50.3,
+      "job_id": "job_20260324_114515",
+      "job_title": "Data Analyst ",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "python",
+        "javascript",
+        "machine learning",
+        "backend"
+      ],
+      "missing_skills": [
+        "sql",
+        "aws",
+        "cloud",
+        "data analysis"
+      ],
+      "confidence_level": "Low",
+      "category": "longlist",
+      "added_date": "2026-03-24T11:45:15.209738",
+      "skill_proficiency": {
+        "python": "Intermediate",
+        "javascript": "Not Determined",
+        "machine learning": "Not Determined",
+        "backend": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 11.3,
+        "skills_match": 50.0,
+        "experience_relevance": 90,
+        "keyword_density": 100,
+        "culture_fit": 36,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260324_114515_Mohammad Bashiri - R",
+      "filename": "Mohammad Bashiri - Resume (1).pdf",
+      "email": "shayan.bashiri@gmail.com",
+      "final_score": 49.7,
+      "job_id": "job_20260324_114515",
+      "job_title": "Data Analyst ",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "javascript",
+        "aws",
+        "cloud",
+        "machine learning",
+        "backend"
+      ],
+      "missing_skills": [
+        "python",
+        "sql",
+        "data analysis"
+      ],
+      "confidence_level": "Very Low",
+      "category": "rejected",
+      "added_date": "2026-03-24T11:45:15.213604",
+      "skill_proficiency": {
+        "javascript": "Not Determined",
+        "aws": "Not Determined",
+        "cloud": "Not Determined",
+        "machine learning": "Not Determined",
+        "backend": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 8.9,
+        "skills_match": 62.5,
+        "experience_relevance": 75,
+        "keyword_density": 100,
+        "culture_fit": 24,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260324_123138_mohsen jedi job CV.p",
+      "filename": "mohsen jedi job CV.pdf.pdf (1).pdf",
+      "email": "jeddimohsen2@gmail.com",
+      "final_score": 49.8,
+      "job_id": "job_20260324_123138",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Very Low",
+      "category": "rejected",
+      "added_date": "2026-03-24T12:31:38.670617",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 1.4,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 32.5,
+        "culture_fit": 48,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260324_123138_CV Ehsan Khosravi.pd",
+      "filename": "CV Ehsan Khosravi.pdf",
+      "email": "ehsan.khosravi.8409@gmail.com",
+      "final_score": 51.0,
+      "job_id": "job_20260324_123138",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Low",
+      "category": "longlist",
+      "added_date": "2026-03-24T12:31:38.680767",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 2.2,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 42.6,
+        "culture_fit": 36,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260325_084332_mohsen jedi job CV.p",
+      "filename": "mohsen jedi job CV.pdf.pdf (1).pdf",
+      "email": "jeddimohsen2@gmail.com",
+      "final_score": 49.8,
+      "job_id": "job_20260325_084332",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Very Low",
+      "category": "rejected",
+      "added_date": "2026-03-25T08:43:32.576469",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 1.4,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 32.5,
+        "culture_fit": 48,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260325_084332_CV Ehsan Khosravi.pd",
+      "filename": "CV Ehsan Khosravi.pdf",
+      "email": "ehsan.khosravi.8409@gmail.com",
+      "final_score": 51.0,
+      "job_id": "job_20260325_084332",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Low",
+      "category": "longlist",
+      "added_date": "2026-03-25T08:43:32.584724",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 2.2,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 42.6,
+        "culture_fit": 36,
+        "seniority_alignment": 70
+      }
+    }
+  ],
+  "jobs": [
+    {
+      "job_id": "job_20260324_114515",
+      "title": "Data Analyst ",
+      "description": "Job Title: Data Analyst\nJob Overview\n\nWe are seeking a detail-oriented and analytical Data Analyst to collect, process, and perform statistical analyses on large datasets. The ideal candidate will translate data into actionable insights that support business decisions and improve performance.\n\nKey Responsibilities\nCollect, clean, and validate data from multiple sources\nAnalyze datasets to identify trends, patterns, and anomalies\nDevelop dashboards, reports, and visualizations (e.g., using Power BI, Tableau)\nCollaborate with stakeholders to understand business needs and deliver insights\nPerform statistical analysis and interpret results\nMaintain databases and ensure data integrity\nAutomate data processes and reporting where possible\nPresent findings in a clear and concise manner to non-technical audiences\nRequired Skills & Qualifications\nBachelor’s degree in Data Science, Statistics, Mathematics, Computer Science, or related field\nProficiency in SQL and at least one programming language (e.g., Python or R)\nExperience with data visualization tools (Tableau, Power BI, or similar)\nStrong analytical and problem-solving skills\nKnowledge of Excel (advanced functions, pivot tables)\nUnderstanding of data modeling and database design\nExcellent communication and presentation skills\nPreferred Qualifications\nExperience with big data tools (e.g., Hadoop, Spark)\nFamiliarity with machine learning concepts\nExperience in a specific industry (finance, healthcare, e-commerce, etc.)\nKnowledge of cloud platforms (AWS, Azure, or Google Cloud)\nKey Competencies\nAttention to detail\nCritical thinking\nTime management\nBusiness acumen\nAbility to work independently and in teams\nTypical Tools & Technologies\nSQL\nPython / R\nExcel\nTableau / Power BI\nDatabases (MySQL, PostgreSQL, etc.)\nWork Environment\n\nData Analysts typically work in office or remote environments, collaborating with cross-functional teams such as marketing, finance, and IT.",
+      "min_score": 50,
+      "created_date": "2026-03-24T11:45:15.202381",
+      "candidate_count": 3,
+      "shortlist_count": 0,
+      "longlist_count": 2
+    },
+    {
+      "job_id": "job_20260324_123138",
+      "title": "AI/ML Engineer",
+      "description": "Develop ML models, optimize algorithms, and deploy scalable AI solutions in production.",
+      "min_score": 50,
+      "created_date": "2026-03-24T12:31:38.667148",
+      "candidate_count": 2,
+      "shortlist_count": 0,
+      "longlist_count": 1,
+      "folder": "candidate_pools\\aiml_engineer"
+    },
+    {
+      "job_id": "job_20260325_084332",
+      "title": "AI/ML Engineer",
+      "description": "Develop ML models, optimize algorithms, and deploy scalable AI solutions in production.",
+      "min_score": 50,
+      "created_date": "2026-03-25T08:43:32.572145",
+      "candidate_count": 2,
+      "shortlist_count": 0,
+      "longlist_count": 1,
+      "folder": "candidate_pools\\aiml_engineer"
+    }
+  ]
+}

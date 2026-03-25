@@ -28,22 +28,78 @@ class CandidatePool:
         with open(self.pool_file, 'w', encoding='utf-8') as f:
             json.dump(self.pool, f, indent=2, ensure_ascii=False)
     
+    def _sanitize_folder_name(self, text):
+        safe = ''.join(c for c in str(text).strip().lower().replace(' ', '_') if c.isalnum() or c in ('_', '-'))
+        return safe or 'job_pool'
+
+    def _ensure_job_folder(self, job_title):
+        folder_name = self._sanitize_folder_name(job_title)
+        base_dir = Path('candidate_pools')
+        path = base_dir / folder_name
+        path.mkdir(parents=True, exist_ok=True)
+        return str(path)
+
     def add_job(self, job_title, job_description, min_score=50):
-        """Add a new job opening to the pool."""
+        """Add a new job opening to the pool and ensure its folder exists."""
         job_id = f"job_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        job_folder = self._ensure_job_folder(job_title)
         job_entry = {
             'job_id': job_id,
             'title': job_title,
             'description': job_description,
             'min_score': min_score,
             'created_date': datetime.now().isoformat(),
-            'candidate_count': 0
+            'candidate_count': 0,
+            'shortlist_count': 0,
+            'longlist_count': 0,
+            'folder': job_folder
         }
         self.pool['jobs'].append(job_entry)
         self._save_pool()
         return job_id
     
-    def add_candidate(self, result, job_id, job_title):
+    def auto_assign_candidates(self, results, job_title, job_description, shortlist_threshold=70, longlist_threshold=50):
+        """Automatically assign candidates to job pools based on their scores."""
+        job_id = self.add_job(job_title, job_description)
+        
+        assigned_candidates = {
+            'shortlist': [],
+            'longlist': [],
+            'rejected': []
+        }
+        
+        for result in results:
+            score = result.get('final_score', 0)
+            if score >= shortlist_threshold:
+                category = 'shortlist'
+            elif score >= longlist_threshold:
+                category = 'longlist'
+            else:
+                category = 'rejected'
+            
+            # Add to pool
+            candidate_entry = self.add_candidate(result, job_id, job_title)
+            candidate_entry['category'] = category
+            assigned_candidates[category].append(candidate_entry)
+            
+            # Update job statistics
+            self._update_job_stats(job_id, category)
+        
+        self._save_pool()
+        return job_id, assigned_candidates
+    
+    def _update_job_stats(self, job_id, category):
+        """Update job statistics when a candidate is added."""
+        for job in self.pool['jobs']:
+            if job['job_id'] == job_id:
+                job['candidate_count'] += 1
+                if category == 'shortlist':
+                    job['shortlist_count'] += 1
+                elif category == 'longlist':
+                    job['longlist_count'] += 1
+                break
+    
+    def add_candidate(self, result, job_id, job_title, category=None):
         """Add a candidate result to the pool for a specific job."""
         candidate_entry = {
             'candidate_id': f"cand_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{result.get('filename', 'unknown')[:20]}",
@@ -56,11 +112,22 @@ class CandidatePool:
             'matched_skills': result.get('matched_skills', []),
             'missing_skills': result.get('missing_skills', []),
             'confidence_level': result.get('confidence_level', 'Unknown'),
+            'category': category or 'unassigned',
             'added_date': datetime.now().isoformat(),
             'skill_proficiency': result.get('skill_proficiency', {}),
             'score_breakdown': result.get('score_breakdown', {}),
         }
         self.pool['candidates'].append(candidate_entry)
+
+        # Also store a candidate file in the job-specific folder
+        job_folder = self._ensure_job_folder(job_title)
+        try:
+            candidate_file = Path(job_folder) / f"{candidate_entry['candidate_id']}.json"
+            with open(candidate_file, 'w', encoding='utf-8') as f:
+                json.dump(candidate_entry, f, indent=2, ensure_ascii=False)
+        except Exception:
+            pass
+
         self._save_pool()
         return candidate_entry
     
@@ -90,9 +157,16 @@ class CandidatePool:
         recommendations.sort(key=lambda x: x['fit_score'], reverse=True)
         return recommendations[:3]  # Top 3 recommendations
     
-    def get_candidates_by_job(self, job_id):
-        """Get all candidates for a specific job."""
-        return [c for c in self.pool['candidates'] if c['job_id'] == job_id]
+    def get_candidates_by_job(self, job_id, category=None):
+        """Get all candidates for a specific job, optionally filtered by category."""
+        candidates = [c for c in self.pool['candidates'] if c['job_id'] == job_id]
+        if category:
+            candidates = [c for c in candidates if c.get('category') == category]
+        return candidates
+    
+    def get_candidates_by_category(self, category):
+        """Get all candidates by category across all jobs."""
+        return [c for c in self.pool['candidates'] if c.get('category') == category]
     
     def get_all_candidates(self):
         """Get all candidates in the pool."""
