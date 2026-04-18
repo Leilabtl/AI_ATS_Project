@@ -224,6 +224,33 @@
         "culture_fit": 36,
         "seniority_alignment": 70
       }
+    },
+    {
+      "candidate_id": "cand_20260325_223613_Mohammad Bashiri - R",
+      "filename": "Mohammad Bashiri - Resume-new.pdf",
+      "email": "shayan.bashiri@hotmail.com",
+      "final_score": 46.2,
+      "job_id": "job_20260325_223613",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Very Low",
+      "category": "rejected",
+      "added_date": "2026-03-25T22:36:13.297820",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 1.0,
+        "skills_match": 100.0,
+        "experience_relevance": 75,
+        "keyword_density": 32.8,
+        "culture_fit": 24,
+        "seniority_alignment": 70
+      }
     }
   ],
   "jobs": [
@@ -257,6 +284,17 @@
       "candidate_count": 2,
       "shortlist_count": 0,
       "longlist_count": 1,
+      "folder": "candidate_pools\\aiml_engineer"
+    },
+    {
+      "job_id": "job_20260325_223613",
+      "title": "AI/ML Engineer",
+      "description": "Develop ML models, optimize algorithms, and deploy scalable AI solutions in production.",
+      "min_score": 50,
+      "created_date": "2026-03-25T22:36:13.295376",
+      "candidate_count": 1,
+      "shortlist_count": 0,
+      "longlist_count": 0,
       "folder": "candidate_pools\\aiml_engineer"
     }
   ]
