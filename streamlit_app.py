@@ -73,13 +73,14 @@ st.markdown("""
 
 #MainMenu, footer, header {visibility: hidden;}
 
-/* Ensure Inter is the default but don't break Material Icons */
-html, body, [class*="st-"] {
+/* Professional Typography - targeted to text blocks only to not break icons */
+html, body, .stApp, .metric-card, .search-table, .nav-item, .sidebar-header, .premium-header, .sidebar-info {
     font-family: 'Inter', sans-serif;
 }
 
-.material-icons {
-    font-family: 'Material Icons' !important;
+/* Explicitly restore icons if they were caught in the override */
+.material-icons, [class*="material-icons"], [data-testid="stExpander"] span {
+    font-family: 'Material Icons', sans-serif !important;
 }
 
 /* Sidebar Styling */
