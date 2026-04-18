@@ -1,0 +1,37 @@
+{
+  "candidate_id": "cand_20260418_172046_CV Ehsan Khosravi.pd",
+  "filename": "CV Ehsan Khosravi.pdf",
+  "email": "ehsan.khosravi.8409@gmail.com",
+  "final_score": 34.3,
+  "job_id": "job_20260418_172046",
+  "job_title": "AI/ML Engineer",
+  "cv_seniority": "junior",
+  "matched_skills": [
+    "machine learning"
+  ],
+  "missing_skills": [
+    "languages",
+    "develop ml"
+  ],
+  "confidence_level": "Very Low",
+  "category": "unassigned",
+  "added_date": "2026-04-18T17:20:46.878910",
+  "skill_proficiency": {
+    "machine learning": "Junior"
+  },
+  "score_breakdown": {
+    "semantic_similarity": 2.2,
+    "skills_match": 33.3,
+    "experience_relevance": 90,
+    "keyword_density": 42.4,
+    "culture_fit": 36,
+    "seniority_alignment": 70
+  },
+  "strategic_summary": "**Low alignment** (34.3%). Significant mismatch in core technical requirements (33.3% skill match) and experience profile.",
+  "improvement_areas": [
+    "Critical Technical Gap: Missing key JD requirements: languages, develop ml",
+    "Seniority Imbalance: Candidate (junior) vs Requirement (unspecified)",
+    "Soft Skill Alignment: Resume lacks indicators for key collaborative or leadership behaviors mentioned in JD.",
+    "Contextual Alignment: Low semantic overlap suggests the resume may be too general or focused on a different domain."
+  ]
+}

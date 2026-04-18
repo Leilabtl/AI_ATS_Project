@@ -196,6 +196,7 @@ class EnhancedMatcher:
             'missing_skills': list(analysis['missing_skills'].keys()),
             'skill_proficiency': skill_proficiency,
             'recommendations': recommendations,
+            'career_advice': self.generate_career_advice(analysis, final_score),
             'bias_warnings': bias_warnings,
             'all_cv_skills': analysis['cv_skills'],
             'all_job_skills': analysis['job_skills'],
@@ -213,46 +214,55 @@ class EnhancedMatcher:
         
         if score >= 85:
             summary = f"**Exceptional candidate** with {score}% alignment. "
-            summary += f"Strong mastery of core skills: {matched_str}. "
-            summary += f"Demonstrates {analysis['culture_fit']}% culture alignment and matches the required {analysis['job_seniority']} seniority profile."
+            summary += f"The candidate shows mastery in {matched_str}, which are the cornerstone requirements for this position. "
+            summary += f"They perfectly match the {analysis['job_seniority']} seniority profile and demonstrate high cultural alignment ({analysis['culture_fit']}%)."
             return summary
         elif score >= 70:
             summary = f"**Strong potential candidate** ({score}%). "
-            summary += f"Excellent fit in {matched_str}. "
+            summary += f"Key areas of strength include {matched_str}, aligning well with our primary technical stack. "
             if missing_str:
-                summary += f"Consider discussing {missing_str} during the interview. "
-            summary += f"Strong semantic relevance ({analysis['semantic_similarity']}%)."
+                summary += f"While technical gaps exist in {missing_str}, their strong foundation suggests they can bridge these quickly. "
+            summary += f"Reflects solid industry relevance ({analysis['experience_relevance']}%)."
             return summary
         elif score >= 50:
             summary = f"**Moderate match candidate** ({score}%). "
-            summary += f"Has foundational knowledge in {matched_str or 'relevant areas'}. "
+            summary += f"Foundational experience identified in {matched_str or 'relevant technical areas'}, but significant alignment is missing in core requirements. "
             if missing_str:
-                summary += f"Significant technical gaps identified in {missing_str}. "
-            summary += "May requires more intensive onboarding or mentorship."
+                summary += f"Critical missing requirements: {missing_str}. These are essential for day-one performance. "
+            summary += "Consider for a more junior role or an internship if the budget allows for mentoring."
             return summary
         else:
-            return f"**Low alignment** ({score}%). Significant mismatch in core technical requirements ({analysis['skills_match']}% skill match) and experience profile."
+             summary = f"**Low alignment** ({score}%). Technical match is only {analysis['skills_match']}%. "
+             summary += f"Mismatch found in both technical stack ({missing_str or 'core skills'}) and seniority requirements. "
+             summary += "Candidate may be better suited for a different career path or a fundamental training program."
+             return summary
 
     def generate_improvement_areas(self, analysis):
         """Synthesize specific, actionable areas for candidate improvement."""
         areas = []
         if analysis['missing_skills']:
             skills = list(analysis['missing_skills'].keys())[:3]
-            areas.append(f"Critical Technical Gap: Missing key JD requirements: {', '.join(skills)}")
+            areas.append(f"**Technical Mastery:** Need to acquire hands-on experience with {', '.join(skills)}. The JD specifically prioritizes these for core delivery.")
         
         if analysis['seniority_alignment'] < 80:
-            areas.append(f"Seniority Imbalance: Candidate ({analysis['cv_seniority']}) vs Requirement ({analysis['job_seniority']})")
+            areas.append(f"**Experience Gap:** The role requires {analysis['job_seniority']} level independent decision-making, while the resume indicates a {analysis['cv_seniority']} profile.")
             
         if analysis['culture_fit'] < 60:
-            areas.append("Soft Skill Alignment: Resume lacks indicators for key collaborative or leadership behaviors mentioned in JD.")
+            areas.append("**Soft Skills & Values:** Missing indicators for collaborative workflows or specific values (e.g., 'Innovation', 'Mentorship') highlighted in the JD.")
             
         if analysis['experience_relevance'] < 60:
-            areas.append("Experience Depth: Industry-specific professional experience markers appear limited for this role level.")
-            
-        if analysis['semantic_similarity'] < 40:
-            areas.append("Contextual Alignment: Low semantic overlap suggests the resume may be too general or focused on a different domain.")
+            areas.append("**Domain Knowledge:** Professional history lacks depth in this specific industry sector compared to standard benchmarks.")
             
         return areas
+
+    def generate_career_advice(self, analysis, score):
+        """Provide specific career guidance and role suggestions."""
+        if score < 60:
+            if 'python' in analysis['matched_skills'] or 'sql' in analysis['matched_skills']:
+                return "Suggested Alternative Role: Data Analyst or Junior Software Support Engineer, where core logic can be applied without the specialized ML/Cloud overhead."
+            else:
+                return "Suggested Alternative Role: Technical Support or QA Specialist, to build foundational industry experience before reapplying for developer positions."
+        return "Recommendation: Proceed with interview. Focus on evaluating their speed of learning and adaptability to our specific stack."
 
 
 def match_cv_to_job(cv_path, job_description):

@@ -70,14 +70,29 @@ class SemanticMatcher:
                 skill_scores[skill] = min(score, 5)
         
         # Dynamic extraction for potential skills (capitalized words in text)
-        potential_skills = re.findall(r'\b[A-Z][a-zA-Z0-9+#]+(?:\s[A-Z][a-zA-Z0-9+#]+)*\b', text)
+        potential_skills = re.findall(r'\b[A-Z][a-zA-Z0-9+#]{2,}(?:\s[A-Z][a-zA-Z0-9+#]{2,})*\b', text)
         for ps in potential_skills:
             ps_lower = ps.lower()
+            # Ignore if too short or a common generic word
             if len(ps_lower) > 2 and ps_lower not in skill_scores:
-                # Basic check to avoid common noise
-                if ps_lower not in ['the', 'this', 'that', 'with', 'from', 'using', 'work', 'experience']:
+                # Blacklist certain generic terms that often get capitalized
+                blacklist = [
+                    'the', 'this', 'that', 'with', 'from', 'using', 'work', 'experience',
+                    'candidate', 'team', 'company', 'industry', 'years', 'development',
+                    'engineer', 'developer', 'management', 'project', 'languages', 'skills'
+                ]
+                if ps_lower not in blacklist and not ps_lower.isdigit():
                     skill_scores[ps_lower] = 1
         
+        # Clean up: If we have specific skills, remove the generic categories
+        if any(s in skill_scores for s in ['python', 'java', 'c++', 'c#', 'golang']):
+            if 'languages' in skill_scores:
+                del skill_scores['languages']
+        
+        if any(s in skill_scores for s in ['react', 'angular', 'vue', 'django', 'flask']):
+            if 'web' in skill_scores:
+                del skill_scores['web']
+                
         return skill_scores
     
     def compute_similarity(self, cv_text, job_text):

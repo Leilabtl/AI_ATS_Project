@@ -1005,48 +1005,55 @@ if st.session_state.results:
             
             st.divider()
             
-            # Matched skills with proficiency
+            # Matched skills with explanation
             if result['matched_skills']:
-                st.markdown("**✅ Matched Skills:**")
-                skills_html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;">'
+                st.markdown("### 🎯 Strategic Alignment & Rationale")
+                st.write("The candidate demonstrates verified expertise in the following key areas identified in the Job Description:")
+                
+                skills_html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px;">'
                 for skill in result['matched_skills']:
-                    proficiency = result['skill_proficiency'].get(skill, 'Not Determined')
+                    proficiency = result['skill_proficiency'].get(skill, 'Verified')
                     p_badge = "badge-excellent" if proficiency.lower() in ['expert', 'advanced'] else "badge-good" if proficiency.lower() == 'intermediate' else "badge-mid"
                     skills_html += f"""
-                    <div class="score-badge {p_badge}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; border-radius: 8px; font-weight: 600;">
-                        <span style="font-size: 0.9rem;">{skill.title()}</span>
-                        <span style="font-size: 0.7rem; opacity: 0.8; font-weight: 400;">{proficiency}</span>
+                    <div class="score-badge {p_badge}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; border-radius: 10px; font-weight: 700; border: 1px solid rgba(0,0,0,0.05);">
+                        <span style="font-size: 0.95rem; text-align: center;">{skill.upper() if len(skill) <= 3 else skill.title()}</span>
+                        <span style="font-size: 0.7rem; opacity: 0.8; font-weight: 500; margin-top: 4px;">{proficiency}</span>
                     </div>
                     """
                 skills_html += '</div>'
                 st.markdown(skills_html, unsafe_allow_html=True)
             else:
-                st.warning("🔍 No specific technical skills from the JD were identified in this resume. This can happen if the resume uses non-standard terminology or if there's a significant mismatch in technical focus.")
+                st.warning("🔍 No specific technical skills from the JD were identified in this resume. This suggests a potential career pivot or a significant mismatch in technical stack.")
             
             st.divider()
             
             # Missing skills & recommendations
             if result['missing_skills']:
-                st.markdown(f"**❌ Missing Core Requirements ({len(result['missing_skills'])}):**")
-                missing_html = '<div style="display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0;">'
+                st.markdown("### 📈 Professional Growth & Interview Preparedness")
+                st.write("To bridge the gap to this role, the candidate should focus on the following development roadmap:")
+                
+                missing_html = '<div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">'
                 for s in result['missing_skills']:
-                    missing_html += f'<span style="background: #fee2e2; color: #b91c1c; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; border: 1px solid #fecaca;">{s.title()}</span>'
+                    missing_html += f'<span style="background: #fff1f2; color: #e11d48; padding: 6px 16px; border-radius: 25px; font-size: 0.9rem; font-weight: 700; border: 1px solid #fecdd3;">Target: {s.title()}</span>'
                 missing_html += '</div>'
                 st.markdown(missing_html, unsafe_allow_html=True)
                 
-                if result['recommendations']:
-                    st.markdown("**💡 Actionable Feedback & Development:**")
-                    for rec in result['recommendations'][:5]:  # Top 5
-                        priority_icon = "🔴" if rec['priority'] == 'high' else "🟡"
+                if result.get('recommendations'):
+                    for rec in result['recommendations'][:4]:
+                        priority_icon = "🚀" if rec['priority'] == 'high' else "📚"
                         st.markdown(f"""
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid var(--primary); padding: 12px 16px; border-radius: 8px; margin: 8px 0;">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                <strong>{priority_icon} {rec['skill'].title()}</strong>
-                                <small style="color: var(--primary); font-weight: 700;">⏱️ {rec['time']}</small>
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {'#e11d48' if rec['priority'] == 'high' else '#f59e0b'}; padding: 16px; border-radius: 12px; margin: 12px 0; box-shadow: var(--card-shadow);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong style="font-size: 1rem; color: #0f172a;">{priority_icon} Study Area: {rec['skill'].title()}</strong>
+                                <span style="background: #f1f5f9; color: #475569; padding: 2px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">{rec['time']} Commit</span>
                             </div>
-                            <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 4px;">{rec['suggestion']}</div>
+                            <div style="font-size: 0.95rem; color: #334155; line-height: 1.5;">{rec['suggestion']}</div>
                         </div>
                         """, unsafe_allow_html=True)
+
+            # Career Advice & Role Suggestion
+            if result.get('career_advice'):
+                st.info(f"💡 **Strategic Career Guidance:** {result['career_advice']}")
             
             st.divider()
             
