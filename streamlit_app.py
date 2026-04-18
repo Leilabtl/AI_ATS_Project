@@ -49,539 +49,274 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Professional Corporate CSS Styling
+# ── Global CSS ──────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    /* Import professional fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-    * {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
+:root {
+    --primary: #2563eb;
+    --primary-light: #eff6ff;
+    --sidebar-bg: #f8fafc;
+    --border: #e2e8f0;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --bg-app: #ffffff;
+}
 
-    /* Professional HR-focused color scheme */
-    :root {
-        --primary-dark: #0a1e33; /* navy blue */
-        --secondary-dark: #112d4e; /* darker steel blue */
-        --panel-dark: #1b345b; /* muted indigo */
-        --accent-blue: #3b82f6;
-        --accent-purple: #8b5cf6;
-        --accent-teal: #22d3ee;
-        --light-blue: #dbeafe;
-        --dark-gray: #7b8fa2;
-        --medium-gray: #94a3b8;
-        --light-gray: #e2e8f0;
-        --success: #10b981;
-        --warning: #f59e0b;
-        --error: #ef4444;
-        --white: #ffffff;
-        --text-primary: #e9f2ff;
-        --text-secondary: #b8c7e4;
-        --text-muted: #a3b1c6;
-    }
+/* Base Styles */
+.stApp {
+    background-color: var(--bg-app) !important;
+    color: var(--text-main) !important;
+}
 
-    /* Main background - professional dark theme */
-    .main {
-        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 100%);
-        color: var(--text-secondary);
-        min-height: 100vh;
-    }
+#MainMenu, footer, header {visibility: hidden;}
 
-    /* App container and text style overrides */
-    .stApp, .block-container {
-        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 100%) !important;
-        color: var(--text-secondary) !important;
-    }
+* {
+    font-family: 'Inter', sans-serif !important;
+}
 
-    .stMarkdown, .stMarkdown p, .stMarkdown li, .stMarkdown ul, .stMarkdown ol, .stText, .stText span, .stText h1, .stText h2, .stText h3 {
-        color: #5c6e82 !important;
-    }
+/* Sidebar Styling */
+[data-testid="stSidebar"] {
+    background-color: var(--sidebar-bg) !important;
+    border-right: 1px solid var(--border) !important;
+}
 
-    .stMarkdown li::marker {
-        color: #0f4465 !important;
-    }
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 16px;
+    margin-bottom: 24px;
+}
 
-    .stButton > button {
-        color: #a9b6c8 !important;
-        background-color: rgba(15, 30, 55, 0.95) !important;
-        border: 1px solid #2f4f82 !important;
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 4px 16px rgba(0,0,0,0.28) !important;
-        transition: background-color 0.2s ease, transform 0.2s ease;
-    }
+.nav-label {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0 16px;
+    margin: 24px 0 8px 0;
+}
 
-    .stButton > button:hover {
-        background-color: rgba(25, 48, 79, 0.95) !important;
-        transform: translateY(-1px) !important;
-    }
+/* Sidebar Item (Custom) */
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin: 2px 12px;
+    transition: all 0.2s;
+}
 
-    .stButton > button:active {
-        background-color: rgba(14, 27, 48, 0.98) !important;
-        transform: translateY(0px) !important;
-    }
+.nav-item.active {
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
 
-    /* Step instruction / info box styling */
-    .stAlert, .stInfo {
-        background: rgba(25, 45, 78, 0.75) !important;
-        border: 1px solid rgba(68, 141, 255, 0.45) !important;
-        color: #d9eafd !important;
-        font-size: 1.03rem !important;
-        font-weight: 600 !important;
-        letter-spacing: 0.01em !important;
-        padding: 0.9rem 1rem !important;
-        border-radius: 10px !important;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
-    }
+.nav-item:hover:not(.active) {
+    background-color: #f1f5f9;
+}
 
-    .stAlert > div > div, .stInfo > div > div, .stAlert > div, .stInfo > div {
-        color: #eaf4ff !important;
-    }
+/* Metrics Dashboard */
+.metric-row {
+    display: flex;
+    gap: 24px;
+    margin: 24px 0;
+}
 
-    .stAlert span, .stInfo span {
-        color: #c5ddff !important;
-    }
+.metric-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    flex: 1;
+}
 
-    /* Header styling */
-    .header-container {
-        background: linear-gradient(135deg, rgba(34, 64, 112, 0.95), rgba(18, 41, 83, 0.95));
-        border: 1px solid rgba(138, 169, 211, 0.35);
-        color: var(--white);
-        padding: 2rem;
-        border-radius: 12px;
-        margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-    }
+.metric-val {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1;
+}
 
-    .logo-container {
-        background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
-        border-radius: 12px;
-        padding: 8px;
-        box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
-    }
+.metric-lab {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin: 8px 0;
+}
 
-    .logo-text {
-        font-size: 2.8rem;
-        font-weight: 800;
-        margin-bottom: 0.5rem;
-        letter-spacing: -0.025em;
-        background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
+.metric-trend {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
 
-    .tagline {
-        font-size: 1.1rem;
-        color: var(--text-secondary);
-        font-weight: 400;
-        opacity: 0.9;
-    }
+/* Tab Styling - Modern SaaS Underline */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 32px;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+}
 
-    /* Professional metric cards */
-    .metric-card {
-        background: linear-gradient(135deg, var(--secondary-dark) 0%, var(--primary-dark) 100%);
-        color: var(--text-primary);
-        padding: 1.5rem;
-        border-radius: 12px;
-        text-align: center;
-        font-weight: 600;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(59, 130, 246, 0.2);
-        transition: all 0.3s ease;
-    }
+.stTabs [data-baseweb="tab"] {
+    height: 48px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted) !important;
+    font-weight: 500 !important;
+    padding: 0 4px;
+}
 
-    .metric-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
-        border-color: var(--accent-blue);
-    }
+.stTabs [aria-selected="true"] {
+    color: var(--primary) !important;
+    border-bottom: 2px solid var(--primary) !important;
+}
 
-    .metric-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--accent-blue);
-        margin-bottom: 0.25rem;
-    }
+/* Modern Card */
+.content-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin: 24px 0;
+}
 
-    .metric-label {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
+/* Score Badges Tooltip Style */
+.badge {
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
 
-    /* Score display cards */
-    .score-excellent {
-        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-        color: var(--white);
-        padding: 2rem;
-        border-radius: 12px;
-        text-align: center;
-        font-size: 1.875rem;
-        font-weight: 700;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
+.badge-blue { background: #dbeafe; color: #1e40af; }
+.badge-green { background: #dcfce7; color: #166534; }
 
-    .score-good {
-        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-        color: var(--white);
-        padding: 2rem;
-        border-radius: 12px;
-        text-align: center;
-        font-size: 1.875rem;
-        font-weight: 700;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
+/* Table Overhaul */
+.search-table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-    .score-moderate {
-        background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
-        color: var(--white);
-        padding: 2rem;
-        border-radius: 12px;
-        text-align: center;
-        font-size: 1.875rem;
-        font-weight: 700;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
+.search-table th {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+}
 
-    .score-low {
-        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-        color: var(--white);
-        padding: 2rem;
-        border-radius: 12px;
-        text-align: center;
-        font-size: 1.875rem;
-        font-weight: 700;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
+.search-row td {
+    padding: 20px 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
 
-    /* Professional skill indicators */
-    .skill-match {
-        background: #f0fdf4;
-        border-left: 4px solid var(--success);
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-radius: 8px;
-        border: 1px solid #dcfce7;
-    }
+.search-row:hover { background: #f8fafc; }
 
-    .skill-missing {
-        background: #fef2f2;
-        border-left: 4px solid var(--error);
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-radius: 8px;
-        border: 1px solid #fee2e2;
-    }
+/* Inputs styling */
+.stTextArea textarea, .stTextInput input {
+    background: #ffffff !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-main) !important;
+    border-radius: 8px !important;
+}
 
-    /* Professional recommendation box */
-    .recommendation-box {
-        background: var(--light-blue);
-        border: 1px solid #bfdbfe;
-        border-left: 4px solid var(--accent-blue);
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-radius: 8px;
-        font-weight: 500;
-    }
+/* Sidebar Info Box */
+.sidebar-info {
+    background: var(--primary-light);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 16px;
+    color: #1e40af;
+    font-size: 0.85rem;
+}
 
-    /* Professional proficiency badges */
-    .proficiency-badge {
-        display: inline-block;
-        padding: 0.375rem 0.75rem;
-        border-radius: 6px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin: 0.25rem;
-    }
-
-    .proficiency-badge.expert {
-        background: #fef3c7;
-        color: #92400e;
-        border: 1px solid #f59e0b;
-    }
-
-    .proficiency-badge.advanced {
-        background: #ecfdf5;
-        color: #065f46;
-        border: 1px solid #10b981;
-    }
-
-    .proficiency-badge.intermediate {
-        background: #eff6ff;
-        color: #1e40af;
-        border: 1px solid #3b82f6;
-    }
-
-    .proficiency-badge.beginner {
-        background: #f3f4f6;
-        color: #374151;
-        border: 1px solid #6b7280;
-    }
-
-    /* Professional section headers */
-    .subheader-title {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: var(--primary-blue);
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid var(--accent-blue);
-    }
-
-    /* Professional buttons */
-    .stButton > button {
-        background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--accent-blue) 100%);
-        color: var(--white);
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 0.875rem;
-        transition: all 0.2s ease;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-    }
-
-    .stButton > button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.12);
-        background: linear-gradient(135deg, var(--accent-blue) 0%, #2563eb 100%);
-    }
-
-    /* Professional sidebar */
-    .sidebar .sidebar-content {
-        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 100%);
-        color: var(--text-secondary);
-        border: 1px solid rgba(203, 213, 225, 0.25);
-        padding: 1rem;
-    }
-
-    .sidebar .stSelectbox, .sidebar .stTextInput, .sidebar .stSelectbox>div, .sidebar .stTextInput>div, .sidebar label, .sidebar .stRadio>div, .sidebar .stMarkdown, .sidebar .stMarkdown p, .sidebar .stRadio>label {
-        color: #e2e8f0 !important;
-        font-weight: 600 !important;
-    }
-
-    .sidebar .stCheckbox > label span, .sidebar .stMultiSelect, .sidebar .stText, .sidebar .stText span {
-        color: #f1f5f9 !important;
-        font-weight: 500 !important;
-    }
-
-    .sidebar .stTextInput>div>input,
-    .sidebar .stSelectbox>div>div,
-    .sidebar .stRadio>div>label,
-    .sidebar .stCheckbox>label,
-    .sidebar .stNumberInput>div>input,
-    .sidebar textarea {
-        background: #0f172a !important;
-        color: #f1f5f9 !important;
-        border-color: rgba(148, 163, 184, 0.5) !important;
-    }
-
-    .sidebar .stCheckbox>label>div, .sidebar .stRadio>label>div {
-        color: #f1f5f9 !important;
-    }
-
-    /* Professional dataframes */
-    .dataframe {
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-    }
-
-    .dataframe th {
-        background: var(--primary-blue);
-        color: var(--white);
-        font-weight: 600;
-        padding: 0.75rem;
-        text-align: left;
-    }
-
-    .dataframe td {
-        padding: 0.75rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    /* Professional tabs - dark theme */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 2px;
-        background: rgba(20, 35, 63, 0.95);
-        padding: 0.5rem;
-        border-radius: 8px;
-        border: 1px solid rgba(148, 163, 184, 0.5);
-        box-shadow: inset 0 1px 12px rgba(0, 0, 0, 0.35);
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        background: rgba(30, 41, 59, 0.75);
-        border-radius: 6px;
-        padding: 0.6rem 1.2rem;
-        font-weight: 600;
-        color: #cbd5e1;
-        border: 1px solid rgba(100, 116, 139, 0.4);
-        min-width: 120px;
-    }
-
-    .stTabs [data-baseweb="tab"]:hover {
-        background: rgba(59, 130, 246, 0.15);
-        color: #f1f5f9;
-    }
-
-    .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-        color: var(--white);
-        border-color: var(--accent-blue);
-    }
-
-    /* Professional expanders */
-    .streamlit-expanderHeader {
-        background: var(--light-gray);
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        font-weight: 600;
-        color: var(--primary-blue);
-    }
-
-    /* Professional alerts */
-    .stAlert {
-        border-radius: 8px;
-        border: none;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-    }
-
-    /* Professional progress bars */
-    .stProgress > div > div > div {
-        background: linear-gradient(90deg, var(--secondary-blue) 0%, var(--accent-blue) 100%);
-    }
-
-    /* Professional file uploader */
-    .uploadedFile {
-        background: var(--light-blue);
-        border: 2px dashed var(--accent-blue);
-        border-radius: 8px;
-        padding: 1rem;
-    }
-
-    /* Professional text inputs */
-    .stTextInput > div > div {
-        border: 2px solid #e5e7eb;
-        border-radius: 8px;
-        transition: border-color 0.2s ease;
-    }
-
-    .stTextInput > div > div:focus-within {
-        border-color: var(--accent-blue);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    /* Professional text areas */
-    .stTextArea > div > div {
-        border: 2px solid #e5e7eb;
-        border-radius: 8px;
-        transition: border-color 0.2s ease;
-    }
-
-    .stTextArea > div > div:focus-within {
-        border-color: var(--accent-blue);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    /* Professional select boxes */
-    .stSelectbox > div > div {
-        border: 2px solid #e5e7eb;
-        border-radius: 8px;
-        background: var(--white);
-    }
-
-    /* Professional sliders */
-    .stSlider > div > div > div {
-        background: var(--secondary-blue);
-    }
-
-    /* Professional checkboxes */
-    .stCheckbox > div > div {
-        border: 2px solid #e5e7eb;
-        border-radius: 4px;
-    }
-
-    .stCheckbox > div > div[data-checked="true"] {
-        background: var(--secondary-blue);
-        border-color: var(--secondary-blue);
-    }
+.premium-header {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--text-main);
+    margin: 2.5rem 0 1.25rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
 </style>
 """, unsafe_allow_html=True)
+
 
 # Initialize session state
 if 'results' not in st.session_state:
     st.session_state.results = None
 
-# Professional Header with Logo
-st.markdown("""
-<div class="header-container">
-    <div style="display: flex; align-items: center; margin-bottom: 1rem;">
-        <div class="logo-container">
-            <svg width="70" height="70" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <linearGradient id="compassGradient" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stop-color="#1d4a86" />
-                        <stop offset="100%" stop-color="#2db6d5" />
-                    </linearGradient>
-                    <linearGradient id="compassInner" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stop-color="#80d3ff" />
-                        <stop offset="100%" stop-color="#00bfa6" />
-                    </linearGradient>
-                </defs>
-                <circle cx="35" cy="35" r="33" fill="url(#compassGradient)" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
-                <circle cx="35" cy="35" r="22" fill="url(#compassInner)" />
-                <path d="M35 15 L40 35 L35 55 L30 35 Z" fill="white" stroke="white" stroke-width="1" />
-                <path d="M20 35 L35 30 L50 35 L35 40 Z" fill="#85e7ff" />
-                <circle cx="35" cy="35" r="4" fill="#ffffff" />
-                <line x1="35" y1="1" x2="35" y2="69" stroke="rgba(255,255,255,0.28)" stroke-width="2" />
-                <line x1="1" y1="35" x2="69" y2="35" stroke="rgba(255,255,255,0.28)" stroke-width="2" />
-            </svg>
-        </div>
-        <div style="margin-left: 1rem;">
-            <div class="logo-text">HR Compass</div>
-            <div class="tagline">Navigate Talent with AI Employer Insights</div>
-        </div>
+# ── Top bar (Custom SaaS Layout) ─────────────────────────────────────────────
+st.markdown(f"""
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; border-bottom: 1px solid #e2e8f0; margin-bottom: 32px; background: white; margin-top: -6rem; margin-left: -5rem; margin-right: -5rem;">
+    <div style="font-size: 0.875rem; color: #64748b; font-weight: 500;">
+        Recruitment / <span style="color: #1e293b; font-weight: 700;">{st.session_state.get('current_job_title', 'New Job')}</span>
     </div>
-    <div style="display: flex; gap: 2rem; font-size: 0.9rem; opacity: 0.8;">
-        <span>🧭 Talent Navigation</span>
-        <span>📊 Intelligent Metrics</span>
-        <span>⚙️ Automated Screening</span>
-        <span>📝 Smart Decision Support</span>
+    <div style="display: flex; gap: 16px; align-items: center;">
+        <span class="badge" style="background: #eff6ff; color: #2563eb; font-weight: 600;">v2.0</span>
+        <button style="background: white; border: 1px solid #e2e8f0; padding: 6px 16px; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">Export</button>
+        <button style="background: white; border: 1px solid #e2e8f0; padding: 6px 16px; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">+ New Job</button>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 matcher = EnhancedMatcher()
 
-# Settings header in main panel
-if st.session_state.get('selected_sidebar_tab') == "Settings":
-    st.markdown("""
-    <div style='background: rgba(17, 25, 42, 0.9); border: 1px solid #3b82f6; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1rem;'>
-        <h2 style='margin: 0; color: #ffffff;'>⚙️ Settings</h2>
-        <p style='margin: 0; color: #cfe0ff; font-weight: 500;'>Configure candidate selection and refresh controls.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-# Professional Sidebar
+# ── Sidebar Navigation ───────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("""
-    <div style="text-align: center; padding: 1rem 0; border-bottom: 2px solid var(--accent-blue); margin-bottom: 1rem;">
-        <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-blue); margin-bottom: 0.5rem;">⚙️ Configuration</div>
-        <div style="font-size: 0.875rem; color: var(--medium-gray);">Setup your recruitment pipeline</div>
+    <div class="sidebar-header">
+        <div style="width: 32px; height: 32px; background: #2563eb; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800;">🧭</div>
+        <div>
+            <div style="font-weight: 700; color: #1e293b; font-size: 1.1rem; line-height: 1;">HR Compass</div>
+            <div style="font-size: 0.7rem; color: #64748b; font-weight: 500;">AI Talent Navigation</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="nav-label">WORKSPACE</div>', unsafe_allow_html=True)
+    st.markdown('<div class="nav-item active">🟦 Job Setup</div>', unsafe_allow_html=True)
+    st.markdown('<div class="nav-item">📁 Candidate Pool</div>', unsafe_allow_html=True)
+    st.markdown('<div class="nav-item">📊 Analytics</div>', unsafe_allow_html=True)
+    st.markdown('<div class="nav-item">📄 Reports</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="nav-label">SETTINGS</div>', unsafe_allow_html=True)
+    st.markdown('<div class="nav-item">⚙️ Preferences</div>', unsafe_allow_html=True)
+    st.markdown('<div class="nav-item">👥 Team</div>', unsafe_allow_html=True)
+    
     st.markdown("""
-    <div style="background: linear-gradient(135deg, var(--secondary-dark) 0%, var(--primary-dark) 100%); border: 1px solid var(--accent-blue); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; font-size: 0.875rem; color: var(--text-primary); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);">
-        <strong>🚀 Quick Start:</strong> Enter job details and upload CVs to begin AI-powered candidate screening
+    <div class="sidebar-info">
+        <div style="font-weight: 700; margin-bottom: 4px;">Quick start</div>
+        Enter job details, upload CVs, then click Analyze to begin AI screening.
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div style="display: flex; gap: 8px; margin: 16px;">
+        <div style="background: #f1f5f9; padding: 12px; border-radius: 8px; flex: 1; text-align: center;">
+            <div style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">0</div>
+            <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">CVs loaded</div>
+        </div>
+        <div style="background: #f1f5f9; padding: 12px; border-radius: 8px; flex: 1; text-align: center;">
+            <div style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">—</div>
+            <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Last run</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
 # Main app tabs
-tab_job, tab_about, tab_pool, tab_settings = st.tabs(["📋 Job Setup", "ℹ️ About", "🌐 Candidate Pool", "⚙️ Settings"])
+tab_job, tab_pool, tab_analytics, tab_settings = st.tabs(["Job Setup", "Candidate Pool", "Analytics", "Settings"])
 
 with tab_job:
         st.session_state.selected_sidebar_tab = "Job Setup"
@@ -663,7 +398,7 @@ with tab_job:
         
         process_button = st.button("🚀 Analyze Candidates", type="primary", use_container_width=True)
     
-with tab_about:
+with tab_analytics:
     st.markdown("""
         ### 🎯 About This System
         
@@ -834,149 +569,149 @@ with tab_pool:
     if 'candidate_pool' not in st.session_state:
         st.session_state.candidate_pool = CandidatePool()
         
-        pool = st.session_state.candidate_pool
+    pool = st.session_state.candidate_pool
         
-        # Pool Statistics - Professional Cards
-        stats = pool.get_pool_statistics()
-        shortlist_total = sum(job.get('shortlist_count', 0) for job in pool.get_all_jobs())
-        
-        st.markdown("""
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-            <div class="metric-card">
-                <div class="metric-value">{:,}</div>
-                <div class="metric-label">Total Candidates</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-value">{:,}</div>
-                <div class="metric-label">Active Jobs</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-value">{:.1f}%</div>
-                <div class="metric-label">Average Score</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-value">{:,}</div>
-                <div class="metric-label">Total Shortlisted</div>
-            </div>
+    # Pool Statistics - Professional Cards
+    stats = pool.get_pool_statistics()
+    shortlist_total = sum(job.get('shortlist_count', 0) for job in pool.get_all_jobs())
+    
+    st.markdown("""
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div class="metric-card">
+            <div class="metric-value">{:,}</div>
+            <div class="metric-label">Total Candidates</div>
         </div>
-        """.format(
-            stats['total_candidates'],
-            stats['total_jobs'], 
-            stats['average_score'],
-            shortlist_total
-        ), unsafe_allow_html=True)
-        
-        # Pool actions
-        pool_action = st.radio("Choose action:", options=["View All Pools", "View by Job", "Export Pool", "Clear Pool"])
-        
-        if pool_action == "View All Pools":
-            # Show summary of all job pools
-            jobs = pool.get_all_jobs()
-            if jobs:
-                st.subheader("📋 Job Pools Overview")
-                for job in jobs:
-                    with st.expander(f"🏢 {job['title']} (ID: {job['job_id']})"):
-                        col1, col2, col3, col4 = st.columns(4)
-                        with col1:
-                            st.metric("Total Candidates", job.get('candidate_count', 0))
-                        with col2:
-                            st.metric("Shortlisted", job.get('shortlist_count', 0))
-                        with col3:
-                            st.metric("Longlisted", job.get('longlist_count', 0))
-                        with col4:
-                            st.metric("Min Score", f"{job.get('min_score', 50)}%")
+        <div class="metric-card">
+            <div class="metric-value">{:,}</div>
+            <div class="metric-label">Active Jobs</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{:.1f}%</div>
+            <div class="metric-label">Average Score</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">{:,}</div>
+            <div class="metric-label">Total Shortlisted</div>
+        </div>
+    </div>
+    """.format(
+        stats['total_candidates'],
+        stats['total_jobs'], 
+        stats['average_score'],
+        shortlist_total
+    ), unsafe_allow_html=True)
+    
+    # Pool actions
+    pool_action = st.radio("Choose action:", options=["View All Pools", "View by Job", "Export Pool", "Clear Pool"])
+    
+    if pool_action == "View All Pools":
+        # Show summary of all job pools
+        jobs = pool.get_all_jobs()
+        if jobs:
+            st.subheader("📋 Job Pools Overview")
+            for job in jobs:
+                with st.expander(f"🏢 {job['title']} (ID: {job['job_id']})"):
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Total Candidates", job.get('candidate_count', 0))
+                    with col2:
+                        st.metric("Shortlisted", job.get('shortlist_count', 0))
+                    with col3:
+                        st.metric("Longlisted", job.get('longlist_count', 0))
+                    with col4:
+                        st.metric("Min Score", f"{job.get('min_score', 50)}%")
 
-                        st.markdown(f"**Folder:** `{job.get('folder', 'N/A')}`")
-                        
-                        # Show candidates by category
-                        candidates = pool.get_candidates_by_job(job['job_id'])
-                        if candidates:
-                            categories = ['shortlist', 'longlist', 'rejected']
-                            tabs = st.tabs([f"🎯 Shortlist ({len([c for c in candidates if c.get('category') == 'shortlist'])})", 
-                                          f"📋 Longlist ({len([c for c in candidates if c.get('category') == 'longlist'])})", 
-                                          f"❌ Rejected ({len([c for c in candidates if c.get('category') == 'rejected'])})"])
-                            
-                            for i, category in enumerate(categories):
-                                with tabs[i]:
-                                    cat_candidates = [c for c in candidates if c.get('category') == category]
-                                    if cat_candidates:
-                                        cat_df = pd.DataFrame([{
-                                            'Candidate': c['filename'],
-                                            'Email': c['email'],
-                                            'Score': f"{c['final_score']}%",
-                                            'Seniority': c['cv_seniority'].title(),
-                                            'Matched Skills': len(c['matched_skills']),
-                                            'Added': c['added_date'][:10]
-                                        } for c in cat_candidates])
-                                        st.dataframe(cat_df, use_container_width=True, hide_index=True)
-                                    else:
-                                        st.info(f"No candidates in {category}")
-            else:
-                st.info("No job pools created yet")
-        
-        elif pool_action == "View by Job":
-            jobs = pool.get_all_jobs()
-            if jobs:
-                job_options = [f"{job['title']} ({job['job_id']})" for job in jobs]
-                selected_job_display = st.selectbox("Select Job Pool:", job_options)
-                
-                if selected_job_display:
-                    selected_job_id = selected_job_display.split('(')[-1].rstrip(')')
-                    candidates = pool.get_candidates_by_job(selected_job_id)
-                    selected_job = next((j for j in jobs if j['job_id'] == selected_job_id), None)
-
-                    if selected_job:
-                        st.markdown(f"**Folder:** `{selected_job.get('folder', 'N/A')}`")
-                        if selected_job.get('folder') and Path(selected_job.get('folder')).exists():
-                            if st.button(f"📁 Open folder for {selected_job['title']}"):
-                                try:
-                                    folder_path = selected_job.get('folder')
-                                    if sys.platform.startswith('win'):
-                                        os.startfile(folder_path)
-                                    elif sys.platform == 'darwin':
-                                        subprocess.run(['open', folder_path], check=False)
-                                    else:
-                                        subprocess.run(['xdg-open', folder_path], check=False)
-                                except Exception as open_err:
-                                    st.error(f"Could not open folder: {open_err}")
-                        else:
-                            st.warning("Pool folder not yet created on disk for this job.")
-
+                    st.markdown(f"**Folder:** `{job.get('folder', 'N/A')}`")
+                    
+                    # Show candidates by category
+                    candidates = pool.get_candidates_by_job(job['job_id'])
                     if candidates:
-                        st.subheader(f"👥 Candidates for {selected_job_display}")
-                        pool_df = pd.DataFrame([{
-                            'Candidate': c['filename'],
-                            'Email': c['email'],
-                            'Category': c.get('category', 'unassigned').title(),
-                            'Score': f"{c['final_score']}%",
-                            'Seniority': c['cv_seniority'].title(),
-                            'Matched Skills': len(c['matched_skills']),
-                            'Added': c['added_date'][:10]
-                        } for c in candidates])
-                        st.dataframe(pool_df, use_container_width=True, hide_index=True)
+                        categories = ['shortlist', 'longlist', 'rejected']
+                        tabs = st.tabs([f"🎯 Shortlist ({len([c for c in candidates if c.get('category') == 'shortlist'])})", 
+                                      f"📋 Longlist ({len([c for c in candidates if c.get('category') == 'longlist'])})", 
+                                      f"❌ Rejected ({len([c for c in candidates if c.get('category') == 'rejected'])})"])
+                        
+                        for i, category in enumerate(categories):
+                            with tabs[i]:
+                                cat_candidates = [c for c in candidates if c.get('category') == category]
+                                if cat_candidates:
+                                    cat_df = pd.DataFrame([{
+                                        'Candidate': c['filename'],
+                                        'Email': c['email'],
+                                        'Score': f"{c['final_score']}%",
+                                        'Seniority': c['cv_seniority'].title(),
+                                        'Matched Skills': len(c['matched_skills']),
+                                        'Added': c['added_date'][:10]
+                                    } for c in cat_candidates])
+                                    st.dataframe(cat_df, use_container_width=True, hide_index=True)
+                                else:
+                                    st.info(f"No candidates in {category}")
+        else:
+            st.info("No job pools created yet")
+    
+    elif pool_action == "View by Job":
+        jobs = pool.get_all_jobs()
+        if jobs:
+            job_options = [f"{job['title']} ({job['job_id']})" for job in jobs]
+            selected_job_display = st.selectbox("Select Job Pool:", job_options)
+            
+            if selected_job_display:
+                selected_job_id = selected_job_display.split('(')[-1].rstrip(')')
+                candidates = pool.get_candidates_by_job(selected_job_id)
+                selected_job = next((j for j in jobs if j['job_id'] == selected_job_id), None)
+
+                if selected_job:
+                    st.markdown(f"**Folder:** `{selected_job.get('folder', 'N/A')}`")
+                    if selected_job.get('folder') and Path(selected_job.get('folder')).exists():
+                        if st.button(f"📁 Open folder for {selected_job['title']}"):
+                            try:
+                                folder_path = selected_job.get('folder')
+                                if sys.platform.startswith('win'):
+                                    os.startfile(folder_path)
+                                elif sys.platform == 'darwin':
+                                    subprocess.run(['open', folder_path], check=False)
+                                else:
+                                    subprocess.run(['xdg-open', folder_path], check=False)
+                            except Exception as open_err:
+                                st.error(f"Could not open folder: {open_err}")
                     else:
-                        st.info("No candidates in this job pool")
-            else:
-                st.info("No job pools available")
-        
-        elif pool_action == "Export Pool":
-            csv_data = pool.export_candidates_csv()
-            if csv_data:
-                st.download_button(
-                    label="📥 Download Pool as CSV",
-                    data=csv_data,
-                    file_name=f"Candidate_Pool_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                    mime="text/csv",
-                    use_container_width=True
-                )
-            else:
-                st.info("No candidates to export")
-        
-        elif pool_action == "Clear Pool":
-            if st.button("🗑️ Clear All Candidates", use_container_width=True):
-                pool.clear_pool()
-                st.session_state.candidate_pool = CandidatePool()
-                st.success("✓ Pool cleared!")
+                        st.warning("Pool folder not yet created on disk for this job.")
+
+                if candidates:
+                    st.subheader(f"👥 Candidates for {selected_job_display}")
+                    pool_df = pd.DataFrame([{
+                        'Candidate': c['filename'],
+                        'Email': c['email'],
+                        'Category': c.get('category', 'unassigned').title(),
+                        'Score': f"{c['final_score']}%",
+                        'Seniority': c['cv_seniority'].title(),
+                        'Matched Skills': len(c['matched_skills']),
+                        'Added': c['added_date'][:10]
+                    } for c in candidates])
+                    st.dataframe(pool_df, use_container_width=True, hide_index=True)
+                else:
+                    st.info("No candidates in this job pool")
+        else:
+            st.info("No job pools available")
+    
+    elif pool_action == "Export Pool":
+        csv_data = pool.export_candidates_csv()
+        if csv_data:
+            st.download_button(
+                label="📥 Download Pool as CSV",
+                data=csv_data,
+                file_name=f"Candidate_Pool_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        else:
+            st.info("No candidates to export")
+    
+    elif pool_action == "Clear Pool":
+        if st.button("🗑️ Clear All Candidates", use_container_width=True):
+            pool.clear_pool()
+            st.session_state.candidate_pool = CandidatePool()
+            st.success("✓ Pool cleared!")
 
 # Main content
 if process_button and job_title and job_description and uploaded_files:
@@ -1007,8 +742,15 @@ if process_button and job_title and job_description and uploaded_files:
     status_text.empty()
     progress_bar.empty()
     
-    st.session_state.results = results
-    st.success(f"✅ Analysis complete! {len(results)} candidate(s) processed")
+    st.markdown("""
+    <div style="background: #ecfdf5; border: 1px solid #10b981; border-radius: 12px; padding: 1.5rem; margin: 1rem 0; display: flex; align-items: center; gap: 1rem;">
+        <div style="font-size: 2rem;">✅</div>
+        <div>
+            <div style="color: #065f46; font-weight: 700; font-size: 1.1rem;">Analysis Pipeline Complete</div>
+            <div style="color: #047857; font-size: 0.9rem;">{} candidate(s) processed and synchronized to Talent Cloud.</div>
+        </div>
+    </div>
+    """.format(len(results)), unsafe_allow_html=True)
     
     # Automatically assign candidates to job pools
     if 'candidate_pool' not in st.session_state:
@@ -1026,24 +768,33 @@ if process_button and job_title and job_description and uploaded_files:
         shortlist_threshold, longlist_threshold
     )
     
-    st.info(f"📋 **Auto-assigned to Job Pool:** {job_title}")
-    st.success(f"""
-    ✓ **Pool Assignment Complete:**
-    - 🎯 Shortlist: {len(assigned['shortlist'])} candidates
-    - 📋 Longlist: {len(assigned['longlist'])} candidates  
-    - ❌ Rejected: {len(assigned['rejected'])} candidates
-    """)
+    # Summary of assignment
+    st.markdown(f"""
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
+        <div class="metric-card">
+            <div class="metric-val" style="color: #10b981; font-size: 1.5rem;">{len(assigned['shortlist'])}</div>
+            <div class="metric-lab" style="font-size: 0.7rem;">Shortlisted</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-val" style="color: #2563eb; font-size: 1.5rem;">{len(assigned['longlist'])}</div>
+            <div class="metric-lab" style="font-size: 0.7rem;">Longlisted</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-val" style="color: #ef4444; font-size: 1.5rem;">{len(assigned['rejected'])}</div>
+            <div class="metric-lab" style="font-size: 0.7rem;">Filtered</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# Display results
+
+# ── Results Processing & Rendering (New) ──────────────────────────────────────
 if st.session_state.results:
     results = st.session_state.results
-    
-    # Initialize report generator early
     report_gen = ReportGenerator()
     
-    # Apply filtering based on selection mode
+    # Sorting and Categorization
+    rejected_candidates = []
     if st.session_state.get('use_thresholds', False):
-        # Threshold-based categorization
         categorized = report_gen.categorize_by_thresholds(
             results,
             shortlist_threshold=st.session_state.shortlist_threshold,
@@ -1051,91 +802,121 @@ if st.session_state.results:
             shortlist_count=st.session_state.shortlist_count,
             longlist_count=st.session_state.longlist_count
         )
-        
-        # Only show candidates above minimum threshold
         results_sorted = categorized['shortlist'] + categorized['longlist']
         results_sorted = sorted(results_sorted, key=lambda x: x['final_score'], reverse=True)
         rejected_candidates = categorized['rejected']
-        
-        st.info(f"""
-        📊 **Threshold-Based Selection Results:**
-        - 🎯 Shortlist: {len(categorized['shortlist'])} candidates (≥{st.session_state.shortlist_threshold}%, max {st.session_state.shortlist_count})
-        - 📋 Longlist: {len(categorized['longlist'])} candidates (≥{st.session_state.longlist_threshold}%, max {st.session_state.longlist_count})
-        - ❌ Rejected: {len(categorized['rejected'])} candidates (below {st.session_state.longlist_threshold}%)
-        """)
     else:
-        # Ranking-based (original behavior)
         results_sorted = sorted(results, key=lambda x: x['final_score'], reverse=True)
-        rejected_candidates = []
+
+    # Dashboard Metrics
+    avg_score = sum(r['final_score'] for r in results) / len(results)
+    top_score = results_sorted[0]['final_score'] if results_sorted else 0
     
-    # === RANKING DASHBOARD ===
-    st.markdown('<div class="subheader-title">🏆 Candidate Ranking</div>', unsafe_allow_html=True)
-    
-    ranking_data = []
-    for idx, result in enumerate(results_sorted, 1):
-        ranking_data.append({
-            'Rank': idx,
-            'Candidate': result['filename'],
-            'Score': f"{result['final_score']}%",
-            'Confidence': result['confidence_level'],
-            'Matched': f"{len(result['matched_skills'])}",
-            'Missing': f"{len(result['missing_skills'])}",
-            'Seniority': result['cv_seniority'].title(),
-        })
-    
-    ranking_df = pd.DataFrame(ranking_data)
-    st.dataframe(ranking_df, use_container_width=True, hide_index=True)
+    st.markdown(f"""
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
+        <div class="metric-card">
+            <div class="metric-lab">Top Match</div>
+            <div class="metric-val" style="color: #2563eb;">{top_score}%</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-lab">Average Alignment</div>
+            <div class="metric-val">{avg_score:.1f}%</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-lab">Processing Confidence</div>
+            <div class="metric-val" style="color: #059669;">High AI</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Ranking Table ──────────────────────────────────────────────────────────
+    rows_html = ""
+    for idx, r in enumerate(results_sorted, 1):
+        score = r['final_score']
+        badge_class = "badge-excellent" if score >= 85 else "badge-good" if score >= 70 else "badge-mid" if score >= 40 else "badge-low"
+        
+        rows_html += f"""
+        <tr class="search-row">
+            <td class="search-cell" style="font-weight: 700; color: #1e293b;">#{idx}</td>
+            <td class="search-cell">
+                <div style="font-weight: 600; color: #1e293b;">{r['filename']}</div>
+                <div style="font-size: 0.75rem; color: #64748b;">{r['cv_seniority'].title()} Level</div>
+            </td>
+            <td class="search-cell">
+                <span class="score-badge {badge_class}">{score}% Match</span>
+            </td>
+            <td class="search-cell" style="color: #64748b;">{len(r['matched_skills'])} matched</td>
+            <td class="search-cell" style="text-align: right;">
+                <span style="color: #0891b2; font-size: 0.8rem; font-weight: 600;">AI EVALUATED</span>
+            </td>
+        </tr>
+        """
+
+    st.markdown(f"""
+    <table class="search-table">
+        <thead>
+            <tr>
+                <th>RANK</th>
+                <th>CANDIDATE</th>
+                <th>AI SCORE</th>
+                <th>SKILLS</th>
+                <th style="text-align: right;">STATUS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {rows_html}
+        </tbody>
+    </table>
+    """, unsafe_allow_html=True)
     
     st.divider()
     
     # === DETAILED ANALYSIS ===
-    st.markdown('<div class="subheader-title">📊 Detailed Candidate Analysis</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-weight: 700; font-size: 1.25rem; color: white; margin: 2rem 0 1rem 0;">📊 Detailed Candidate Analysis</div>', unsafe_allow_html=True)
     
     for idx, result in enumerate(results_sorted, 1):
         with st.expander(f"#{idx} - {result['filename']} ({result['confidence_level']}) 👤", expanded=(idx == 1)):
             
             # Score visualization
             final_score = result['final_score']
-            if final_score >= 85:
-                score_class = "score-excellent"
-            elif final_score >= 70:
-                score_class = "score-good"
-            elif final_score >= 60:
-                score_class = "score-moderate"
-            else:
-                score_class = "score-low"
+            badge_class = "badge-excellent" if final_score >= 85 else "badge-good" if final_score >= 70 else "badge-mid" if final_score >= 40 else "badge-low"
             
             # Professional Score Display
-            st.markdown(f"<div class='{score_class}'>{result['confidence_emoji']} {final_score}% Match</div>", unsafe_allow_html=True)
-            st.markdown(f"<div style='text-align: center; margin: 0.5rem 0; font-weight: 600; color: var(--medium-gray);'>{result['confidence_level']}</div>", unsafe_allow_html=True)
+            st.markdown(f"""
+            <div style="text-align: center; padding: 2rem; background: #eff6ff; border-radius: 12px; border: 1px solid #dbeafe; margin-bottom: 2rem;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">{result['confidence_emoji']}</div>
+                <div style="font-size: 2.5rem; font-weight: 700; color: #1e293b;">{final_score}% Match</div>
+                <div class="score-badge {badge_class}" style="display: inline-block; margin-top: 0.5rem;">{result['confidence_level']}</div>
+            </div>
+            """, unsafe_allow_html=True)
             
             # Professional Score Breakdown Cards
             st.markdown("**📈 Scoring Breakdown:**")
             st.markdown("""
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin: 1rem 0;">
                 <div class="metric-card">
-                    <div class="metric-value">{:.1f}%</div>
-                    <div class="metric-label">Semantic</div>
+                    <div class="metric-lab">Semantic</div>
+                    <div class="metric-val" style="font-size: 1.5rem;">{:.1f}%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value">{:.1f}%</div>
-                    <div class="metric-label">Skills</div>
+                    <div class="metric-lab">Skills</div>
+                    <div class="metric-val" style="font-size: 1.5rem;">{:.1f}%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value">{:.1f}%</div>
-                    <div class="metric-label">Experience</div>
+                    <div class="metric-lab">Experience</div>
+                    <div class="metric-val" style="font-size: 1.5rem;">{:.1f}%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value">{:.1f}%</div>
-                    <div class="metric-label">Keywords</div>
+                    <div class="metric-lab">Keywords</div>
+                    <div class="metric-val" style="font-size: 1.5rem;">{:.1f}%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value">{:.1f}%</div>
-                    <div class="metric-label">Culture</div>
+                    <div class="metric-lab">Culture</div>
+                    <div class="metric-val" style="font-size: 1.5rem;">{:.1f}%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value">{:.1f}%</div>
-                    <div class="metric-label">Seniority</div>
+                    <div class="metric-lab">Seniority</div>
+                    <div class="metric-val" style="font-size: 1.5rem;">{:.1f}%</div>
                 </div>
             </div>
             """.format(
@@ -1164,8 +945,9 @@ if st.session_state.results:
                 for skill_idx, skill in enumerate(result['matched_skills']):
                     with cols[skill_idx % len(cols)]:
                         proficiency = result['skill_proficiency'].get(skill, 'Missing Information')
-                        badge_class = proficiency.lower()
-                        st.markdown(f"<div class='proficiency-badge {badge_class}'>{skill.title()}<br/>{proficiency}</div>", unsafe_allow_html=True)
+                        # Use new badge classes
+                        p_badge = "badge-excellent" if proficiency.lower() in ['expert', 'advanced'] else "badge-good" if proficiency.lower() == 'intermediate' else "badge-mid"
+                        st.markdown(f"<div class='score-badge {p_badge}' style='display: block; text-align: center; margin: 4px 0;'>{skill.title()}<br/><small>{proficiency}</small></div>", unsafe_allow_html=True)
             else:
                 st.warning("No skills matched")
             
@@ -1181,29 +963,13 @@ if st.session_state.results:
                     st.markdown("**💡 Learning Recommendations:**")
                     for rec in result['recommendations'][:5]:  # Top 5
                         priority_icon = "🔴" if rec['priority'] == 'high' else "🟡"
-                        effort_bar = "█" * rec['effort'] + "░" * (4 - rec['effort'])
                         st.markdown(f"""
-                        <div class="recommendation-box">
-                        <strong>{priority_icon} {rec['skill'].title()}</strong><br/>
-                        {rec['suggestion']}<br/>
-                        ⏱️ {rec['time']} | Effort: {effort_bar}
+                        <div style="background: rgba(99, 102, 241, 0.05); border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 1rem; border-radius: 8px; margin: 8px 0;">
+                            <strong>{priority_icon} {rec['skill'].title()}</strong><br/>
+                            <span style="font-size: 0.9rem; color: #94a3b8;">{rec['suggestion']}</span><br/>
+                            <small style="color: #6366f1;">⏱️ {rec['time']}</small>
                         </div>
                         """, unsafe_allow_html=True)
-            
-            st.divider()
-            
-            # Bias awareness
-            if result['bias_warnings']:
-                st.markdown("**⚖️ Bias Awareness Alerts:**")
-                for warning_text, warning_type in result['bias_warnings']:
-                    st.markdown(f"""
-                    <div class="bias-alert">
-                    <strong>⚠️ {warning_text}</strong>
-                    </div>
-                    """, unsafe_allow_html=True)
-                st.caption("💡 Evaluate candidates fairly based on qualifications and merit.")
-            else:
-                st.success("✓ No obvious bias indicators detected")
             
             st.divider()
             
@@ -1261,7 +1027,7 @@ if st.session_state.results:
     # === COMPARATIVE ANALYSIS ===
     if len(results_sorted) > 1:
         st.divider()
-        st.markdown('<div class="subheader-title">📈 Comparative Analysis</div>', unsafe_allow_html=True)
+        st.markdown('<div class="premium-header">📈 Comparative Analysis</div>', unsafe_allow_html=True)
         
         comparison_df = pd.DataFrame({
             'Candidate': [r['filename'] for r in results_sorted],
@@ -1276,7 +1042,7 @@ if st.session_state.results:
     
     # === LONGLIST & SHORTLIST ===
     st.divider()
-    st.markdown('<div class="subheader-title">📋 Longlist & 🎯 Shortlist</div>', unsafe_allow_html=True)
+    st.markdown('<div class="premium-header">📋 Longlist & 🎯 Shortlist</div>', unsafe_allow_html=True)
     
     # Determine longlist and shortlist based on mode
     if st.session_state.get('use_thresholds', False):
@@ -1294,51 +1060,58 @@ if st.session_state.results:
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader(f"📋 LONGLIST ({len(longlist)})")
+        st.markdown(f'<div style="font-weight: 700; font-size: 1.1rem; color: #6366f1; margin-bottom: 1rem;">📋 LONGLIST ({len(longlist)})</div>', unsafe_allow_html=True)
         
-        longlist_data = []
-        for idx, result in enumerate(longlist, 1):
-            longlist_data.append({
-                'Position': idx,
-                'Name': result['filename'],
-                'Score': f"{result['final_score']}%",
-                'Level': result['cv_seniority'].title(),
-                'Matched Skills': len(result['matched_skills']),
-                'Status': '✅ LONGLIST'
-            })
-        
-        if longlist_data:
-            longlist_df = pd.DataFrame(longlist_data)
-            st.dataframe(longlist_df, use_container_width=True, hide_index=True)
+        longlist_rows = ""
+        for idx, r in enumerate(longlist, 1):
+            longlist_rows += f"""
+            <tr class="search-row">
+                <td class="search-cell" style="font-weight: 700; color: #2563eb;">#{idx}</td>
+                <td class="search-cell" style="color: #1e293b; font-weight: 600;">{r['filename']}</td>
+                <td class="search-cell" style="color: #10b981; font-weight: 700;">{r['final_score']}%</td>
+            </tr>
+            """
+            
+        if longlist:
+            st.markdown(f"""
+            <table class="search-table">
+                <tbody>{longlist_rows}</tbody>
+            </table>
+            """, unsafe_allow_html=True)
             st.success(f"✓ {len(longlist)} candidate(s) selected for longlist")
         else:
             st.warning("No candidates meet the longlist criteria")
     
     # Shortlist
     with col2:
-        st.subheader(f"🎯 SHORTLIST ({len(shortlist)})")
+        st.markdown(f'<div style="font-weight: 700; font-size: 1.1rem; color: #10b981; margin-bottom: 1rem;">🎯 SHORTLIST ({len(shortlist)})</div>', unsafe_allow_html=True)
         
-        shortlist_data = []
-        for idx, result in enumerate(shortlist, 1):
-            shortlist_data.append({
-                'Position': idx,
-                'Name': result['filename'],
-                'Score': f"{result['final_score']}%",
-                'Confidence': result['confidence_level'],
-                'Fit': f"{result['score_breakdown']['semantic_similarity']:.0f}%",
-                'Status': '🎯 SHORTLIST'
-            })
+        shortlist_rows = ""
+        for idx, r in enumerate(shortlist, 1):
+            shortlist_rows += f"""
+            <tr class="search-row">
+                <td class="search-cell" style="font-weight: 700; color: #10b981;">#{idx}</td>
+                <td class="search-cell" style="color: #1e293b; font-weight: 600;">{r['filename']}</td>
+                <td class="search-cell">
+                     <span class="score-badge badge-excellent">{r['confidence_level']}</span>
+                </td>
+            </tr>
+            """
         
-        if shortlist_data:
-            shortlist_df = pd.DataFrame(shortlist_data)
-            st.dataframe(shortlist_df, use_container_width=True, hide_index=True)
+        if shortlist:
+            st.markdown(f"""
+            <table class="search-table">
+                <tbody>{shortlist_rows}</tbody>
+            </table>
+            """, unsafe_allow_html=True)
             st.info(f"ℹ️ {len(shortlist)} candidate(s) selected for interviews")
         else:
             st.warning("No candidates meet the shortlist criteria")
+
     
     # === RECOMMENDATIONS ===
     st.divider()
-    st.markdown('<div class="subheader-title">🎯 HR Recommendations</div>', unsafe_allow_html=True)
+    st.markdown('<div class="premium-header">🎯 HR Recommendations</div>', unsafe_allow_html=True)
     
     if not results_sorted:
         st.warning("⚠️ No candidates meet the minimum threshold requirements. Please adjust your settings and try again.")
@@ -1396,7 +1169,7 @@ if st.session_state.results:
             
             # Export summary (only if there are candidates)
             st.divider()
-            st.markdown('<div class="subheader-title">📥 Export & Reports</div>', unsafe_allow_html=True)
+            st.markdown('<div class="premium-header">📥 Export & Reports</div>', unsafe_allow_html=True)
             
             # PDF Reports Section
             st.markdown("### 📄 PDF Reports")
@@ -1626,19 +1399,32 @@ if st.session_state.results:
     # === REJECTED CANDIDATES (Threshold Mode) ===
     if st.session_state.get('use_thresholds', False) and rejected_candidates:
         st.divider()
-        st.markdown('<div class="subheader-title">❌ Rejected Candidates (Below Minimum Threshold)</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-weight: 700; font-size: 1.25rem; color: #ef4444; margin: 2rem 0 1rem 0;">❌ Rejected Candidates (Below Minimum Threshold)</div>', unsafe_allow_html=True)
         
-        rejected_df = pd.DataFrame([{
-            'Candidate': c['filename'],
-            'Score': f"{c['final_score']}%",
-            'Email': c.get('candidate_email', 'N/A'),
-            'Confidence': c['confidence_level'],
-            'Matched Skills': len(c['matched_skills']),
-            'Missing Skills': len(c['missing_skills']),
-            'Seniority': c['cv_seniority'].title(),
-        } for c in rejected_candidates])
+        rejected_rows = ""
+        for idx, r in enumerate(rejected_candidates, 1):
+            rejected_rows += f"""
+            <tr class="search-row">
+                <td class="search-cell" style="font-weight: 700; color: #ef4444;">#{idx}</td>
+                <td class="search-cell" style="color: white; font-weight: 600;">{r['filename']}</td>
+                <td class="search-cell" style="color: #ef4444; font-weight: 700;">{r['final_score']}%</td>
+                <td class="search-cell" style="color: #94a3b8;">{r['cv_seniority'].title()}</td>
+            </tr>
+            """
         
-        st.dataframe(rejected_df, use_container_width=True, hide_index=True)
+        st.markdown(f"""
+        <table class="search-table">
+            <thead>
+                <tr>
+                    <th style="color: #ef4444;">RANK</th>
+                    <th>CANDIDATE</th>
+                    <th style="color: #ef4444;">SCORE</th>
+                    <th>LEVEL</th>
+                </tr>
+            </thead>
+            <tbody>{rejected_rows}</tbody>
+        </table>
+        """, unsafe_allow_html=True)
         
         st.info("💡 These candidates did not meet the minimum score threshold and will receive rejection emails.")
         
@@ -1662,7 +1448,7 @@ if st.session_state.results:
     
             # === ADVANCED ENTERPRISE FEATURES ===
             st.divider()
-            st.markdown('<div class="subheader-title">🚀 Advanced Analytics & Features</div>', unsafe_allow_html=True)
+            st.markdown('<div class="premium-header">🚀 Advanced Analytics & Features</div>', unsafe_allow_html=True)
     
     advanced = AdvancedATS()
     

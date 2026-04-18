@@ -38,10 +38,10 @@ The system includes a persistent pool to manage candidates across different job 
 - **Fast Analysis:** Processing speeds of ~1-2 seconds per candidate.
 - **Memory Optimization:** Built to handle large datasets efficiently within browser environments.
 
-### 6. 🛠️ Advanced Tools
-- **Proactive Tagging:** Automatic tagging of candidates based on detected expertise levels.
-- **Role Dictionary:** Pre-configured and customizable job titles for quick setup.
-- **Explainable Analytics:** Detailed breakdown of match scores.
+### 6. 🛠️ Modern SaaS Interface
+- **Light SaaS Design:** A clean, professional high-fidelity interface optimized for long-term usage.
+- **Dual Navigation:** Combined sidebar and top-tab navigation for efficient workflow management.
+- **Responsive Workspace:** Optimized for large screens and modern browser environments.
 
 ---
 
@@ -50,7 +50,7 @@ The system includes a persistent pool to manage candidates across different job 
 - **Intelligence Engine:** Python NLP libraries & Custom Matching Algorithms
 - **Data Handling:** JSON & Pandas
 - **Document Engine:** ReportLab (for PDF generation)
-- **Styling:** Custom CSS for a premium, corporate dark-mode experience
+- **Design System:** Custom CSS tokens for a premium Light SaaS experience (Inter typography)
 
 ---
 
@@ -71,7 +71,7 @@ The system includes a persistent pool to manage candidates across different job 
    ```bash
    streamlit run streamlit_app.py
    ```
-   *The app will typically be available at `http://localhost:8501`*
+   *The app will typically be available at `http://localhost:8501` (or `8504` in this workspace)*
 
 ---
 
@@ -91,4 +91,4 @@ This project is optimized for deployment on **Streamlit Community Cloud**. To de
 
 ---
 
-**Status:** ✅ Fully Operational | **Version:** 2.1
+**Status:** ✅ Fully Operational | **Version:** 2.4.0
