@@ -13,6 +13,7 @@ from datetime import datetime
 from io import BytesIO
 import json
 import zipfile
+from collections import Counter
 
 JOB_TITLE_FILE = 'job_titles.json'
 
@@ -60,9 +61,10 @@ st.markdown("""
     --primary-light: #eff6ff;
     --sidebar-bg: #f8fafc;
     --border: #e2e8f0;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
+    --text-main: #020617;
+    --text-muted: #334155;
     --bg-app: #ffffff;
+    --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
 /* Base Styles */
@@ -144,6 +146,7 @@ html, body, .stApp, .metric-card, .search-table, .nav-item, .sidebar-header, .pr
     border-radius: 12px;
     padding: 24px;
     flex: 1;
+    min-width: 200px;
 }
 
 .metric-val {
@@ -255,6 +258,40 @@ html, body, .stApp, .metric-card, .search-table, .nav-item, .sidebar-header, .pr
     display: flex;
     align-items: center;
     gap: 0.75rem;
+}
+
+/* Strategic Analysis Card */
+.strategic-card {
+    background: #fdfdfd;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-left: 5px solid var(--primary);
+}
+
+.strategic-summary {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 1rem;
+}
+
+.improvement-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0;
+    font-size: 0.95rem;
+    color: #1e293b;
+    background: #f8fafc;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.improvement-item span {
+    font-size: 1.2rem;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -846,11 +883,14 @@ if st.session_state.results:
         score = r['final_score']
         badge_class = "badge-excellent" if score >= 85 else "badge-good" if score >= 70 else "badge-mid" if score >= 40 else "badge-low"
         
+        # Clean up filename for display
+        display_name = r['filename'].replace('.pdf', '').replace('.txt', '').replace('.docx', '')
+        
         rows_html += f"""<tr class="search-row">
-            <td class="search-cell" style="font-weight: 700; color: #1e293b;">#{idx}</td>
+            <td class="search-cell" style="font-weight: 700; color: #020617;">#{idx}</td>
             <td class="search-cell">
-                <div style="font-weight: 600; color: #1e293b;">{r['filename']}</div>
-                <div style="font-size: 0.75rem; color: #64748b;">{r['cv_seniority'].title()} Level</div>
+                <div style="font-weight: 700; color: #020617; font-size: 0.95rem;">{display_name}</div>
+                <div style="font-size: 0.75rem; color: #475569; margin-top: 2px;">{r['cv_seniority'].title()} Level</div>
             </td>
             <td class="search-cell">
                 <span class="score-badge {badge_class}">{score}% Match</span>
@@ -862,20 +902,22 @@ if st.session_state.results:
         </tr>"""
 
     st.markdown(f"""
-    <table class="search-table">
-        <thead>
-            <tr>
-                <th>RANK</th>
-                <th>CANDIDATE</th>
-                <th>AI SCORE</th>
-                <th>SKILLS</th>
-                <th style="text-align: right;">STATUS</th>
-            </tr>
-        </thead>
-        <tbody>
-            {rows_html}
-        </tbody>
-    </table>
+    <div style="overflow-x: auto;">
+        <table class="search-table">
+            <thead>
+                <tr>
+                    <th>RANK</th>
+                    <th>CANDIDATE</th>
+                    <th>AI SCORE</th>
+                    <th>SKILLS</th>
+                    <th style="text-align: right;">STATUS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {rows_html}
+            </tbody>
+        </table>
+    </div>
     """, unsafe_allow_html=True)
     
     st.divider()
@@ -890,9 +932,25 @@ if st.session_state.results:
             final_score = result['final_score']
             badge_class = "badge-excellent" if final_score >= 85 else "badge-good" if final_score >= 70 else "badge-mid" if final_score >= 40 else "badge-low"
             
+            # Strategic Analysis Section
+            st.markdown(f"""
+            <div class="strategic-card">
+                <div class="strategic-summary">
+                    🎯 Strategic Analysis
+                </div>
+                <div style="font-size: 1rem; color: var(--text-main); line-height: 1.5; margin-bottom: 1rem;">
+                    {result.get('strategic_summary', 'No summary available.')}
+                </div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                    Areas for Improvement
+                </div>
+                {" ".join([f'<div class="improvement-item"><span>⚠️</span> {area}</div>' for area in result.get('improvement_areas', [])]) if result.get('improvement_areas') else '<div class="improvement-item"><span>✅</span> No critical improvement areas detected.</div>'}
+            </div>
+            """, unsafe_allow_html=True)
+
             # Professional Score Display
             st.markdown(f"""
-            <div style="text-align: center; padding: 2rem; background: #eff6ff; border-radius: 12px; border: 1px solid #dbeafe; margin-bottom: 2rem;">
+            <div style="text-align: center; padding: 2rem; background: var(--primary-light); border-radius: 12px; border: 1px solid #dbeafe; margin-bottom: 2rem;">
                 <div style="font-size: 3rem; margin-bottom: 0.5rem;">{result['confidence_emoji']}</div>
                 <div style="font-size: 2.5rem; font-weight: 700; color: #1e293b;">{final_score}% Match</div>
                 <div class="score-badge {badge_class}" style="display: inline-block; margin-top: 0.5rem;">{result['confidence_level']}</div>
@@ -950,33 +1008,43 @@ if st.session_state.results:
             # Matched skills with proficiency
             if result['matched_skills']:
                 st.markdown("**✅ Matched Skills:**")
-                cols = st.columns(min(4, len(result['matched_skills'])))
-                for skill_idx, skill in enumerate(result['matched_skills']):
-                    with cols[skill_idx % len(cols)]:
-                        proficiency = result['skill_proficiency'].get(skill, 'Missing Information')
-                        # Use new badge classes
-                        p_badge = "badge-excellent" if proficiency.lower() in ['expert', 'advanced'] else "badge-good" if proficiency.lower() == 'intermediate' else "badge-mid"
-                        st.markdown(f"<div class='score-badge {p_badge}' style='display: block; text-align: center; margin: 4px 0;'>{skill.title()}<br/><small>{proficiency}</small></div>", unsafe_allow_html=True)
+                skills_html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;">'
+                for skill in result['matched_skills']:
+                    proficiency = result['skill_proficiency'].get(skill, 'Not Determined')
+                    p_badge = "badge-excellent" if proficiency.lower() in ['expert', 'advanced'] else "badge-good" if proficiency.lower() == 'intermediate' else "badge-mid"
+                    skills_html += f"""
+                    <div class="score-badge {p_badge}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; border-radius: 8px; font-weight: 600;">
+                        <span style="font-size: 0.9rem;">{skill.title()}</span>
+                        <span style="font-size: 0.7rem; opacity: 0.8; font-weight: 400;">{proficiency}</span>
+                    </div>
+                    """
+                skills_html += '</div>'
+                st.markdown(skills_html, unsafe_allow_html=True)
             else:
-                st.warning("No skills matched")
+                st.warning("🔍 No specific technical skills from the JD were identified in this resume. This can happen if the resume uses non-standard terminology or if there's a significant mismatch in technical focus.")
             
             st.divider()
             
             # Missing skills & recommendations
             if result['missing_skills']:
-                st.markdown(f"**❌ Missing Skills ({len(result['missing_skills'])}):**")
-                missing_list = ", ".join([s.title() for s in result['missing_skills']])
-                st.warning(missing_list)
+                st.markdown(f"**❌ Missing Core Requirements ({len(result['missing_skills'])}):**")
+                missing_html = '<div style="display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0;">'
+                for s in result['missing_skills']:
+                    missing_html += f'<span style="background: #fee2e2; color: #b91c1c; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; border: 1px solid #fecaca;">{s.title()}</span>'
+                missing_html += '</div>'
+                st.markdown(missing_html, unsafe_allow_html=True)
                 
                 if result['recommendations']:
-                    st.markdown("**💡 Learning Recommendations:**")
+                    st.markdown("**💡 Actionable Feedback & Development:**")
                     for rec in result['recommendations'][:5]:  # Top 5
                         priority_icon = "🔴" if rec['priority'] == 'high' else "🟡"
                         st.markdown(f"""
-                        <div style="background: rgba(99, 102, 241, 0.05); border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 1rem; border-radius: 8px; margin: 8px 0;">
-                            <strong>{priority_icon} {rec['skill'].title()}</strong><br/>
-                            <span style="font-size: 0.9rem; color: #94a3b8;">{rec['suggestion']}</span><br/>
-                            <small style="color: #6366f1;">⏱️ {rec['time']}</small>
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid var(--primary); padding: 12px 16px; border-radius: 8px; margin: 8px 0;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <strong>{priority_icon} {rec['skill'].title()}</strong>
+                                <small style="color: var(--primary); font-weight: 700;">⏱️ {rec['time']}</small>
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 4px;">{rec['suggestion']}</div>
                         </div>
                         """, unsafe_allow_html=True)
             
@@ -1132,10 +1200,10 @@ if st.session_state.results:
             ### ✅ EXCELLENT MATCH
             **{top_candidate['filename']}** - {top_candidate['final_score']}%
             
-            This candidate is **highly qualified** and aligns exceptionally well with requirements.
-            - ✓ Strong skill alignment
-            - ✓ Relevant experience
-            - ✓ High semantic match
+            {top_candidate.get('strategic_summary', 'This candidate is highly qualified and aligns exceptionally well with requirements.')}
+            
+            **Key strengths:**
+            {"\n".join([f'- {s.title()}' for s in top_candidate.get('matched_skills', [])[:3]])}
             
             **Recommendation:** Immediate interview - top priority candidate.
             """)
@@ -1144,10 +1212,10 @@ if st.session_state.results:
             ### ⭐ STRONG MATCH
             **{top_candidate['filename']}** - {top_candidate['final_score']}%
             
-            This candidate shows **good alignment** with role requirements.
-            - ✓ Most required skills present
-            - ✓ Relevant background
-            - ⚠️ Some minor skill gaps
+            {top_candidate.get('strategic_summary', 'This candidate shows good alignment with role requirements.')}
+            
+            **Focus areas:**
+            {"\n".join([f'- {area}' for area in top_candidate.get('improvement_areas', [])[:2]])}
             
             **Recommendation:** Schedule interview. Discuss learning commitment for skill gaps.
             """)
@@ -1156,10 +1224,10 @@ if st.session_state.results:
             ### 🟡 MODERATE MATCH
             **{top_candidate['filename']}** - {top_candidate['final_score']}%
             
-            This candidate has **potential** but significant gaps exist.
-            - ⚠️ Multiple skill gaps
-            - ⚠️ Partial experience match
-            - ⚠️ Needs development in key areas
+            {top_candidate.get('strategic_summary', 'This candidate has potential but significant gaps exist.')}
+            
+            **Gap Analysis:**
+            {"\n".join([f'- {area}' for area in top_candidate.get('improvement_areas', [])[:3]])}
             
             **Recommendation:** Consider for growth-focused role or with training support.
             """)
@@ -1168,10 +1236,10 @@ if st.session_state.results:
             ### 🔴 WEAK MATCH
             **{top_candidate['filename']}** - {top_candidate['final_score']}%
             
-            This candidate **does not meet** core requirements.
-            - ✗ Major skill gaps
-            - ✗ Limited experience alignment
-            - ✗ Significant development needed
+            {top_candidate.get('strategic_summary', 'This candidate does not meet core requirements.')}
+            
+            **Critical Gaps:**
+            {"\n".join([f'- {area}' for area in top_candidate.get('improvement_areas', [])]) or "- No critical gaps detected."}
             
             **Recommendation:** Consider for different roles or revisit later after skill development.
             """)
@@ -1558,6 +1626,34 @@ if st.session_state.results:
             missing_df = pd.DataFrame(analytics['top_missing_skills'])
             if len(missing_df) > 0:
                 st.dataframe(missing_df[['skill', 'percentage']], use_container_width=True, hide_index=True)
+        
+        st.divider()
+        
+        # Strategic Talent Assessment (Actionable Insights)
+        st.markdown("#### 🎯 Strategic Talent Assessment")
+        st.info("Aggregated analysis of the candidate pool versus job requirements.")
+        
+        # Calculate pool-wide gaps
+        all_improvements = []
+        for r in results_sorted:
+            all_improvements.extend(r.get('improvement_areas', []))
+        
+        if all_improvements:
+            common_improvements = Counter(all_improvements).most_common(5)
+            st.markdown("**Common Portfolio Gaps Detected:**")
+            for gap, count in common_improvements:
+                percentage = (count / len(results_sorted)) * 100
+                st.markdown(f"""
+                <div class="improvement-item">
+                    <span>⚠️</span> 
+                    <div style="flex: 1;">
+                        <strong>{gap}</strong><br/>
+                        <small style="color: var(--text-muted);">Affects {percentage:.0f}% of applicants</small>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.success("✅ No systemic portfolio gaps identified. The candidate pool shows strong alignment with core requirements.")
         
         st.divider()
         

@@ -11,21 +11,28 @@ class SemanticMatcher:
     
     def __init__(self):
         self.skill_keywords = {
-            'python': ['python', 'py', 'django', 'flask', 'fastapi', 'numpy', 'pandas', 'scikit-learn'],
-            'java': ['java', 'spring', 'maven', 'junit', 'gradle', 'hibernate'],
-            'sql': ['sql', 'mysql', 'postgresql', 'tsql', 'oracle', 'database', 'db', 'nosql', 'mongodb'],
-            'javascript': ['javascript', 'js', 'react', 'nodejs', 'typescript', 'ts', 'vue', 'angular'],
-            'docker': ['docker', 'kubernetes', 'container', 'k8s', 'podman', 'compose'],
-            'aws': ['aws', 'amazon', 'ec2', 's3', 'lambda', 'rds', 'sqs'],
-            'cloud': ['cloud', 'azure', 'gcp', 'google cloud', 'heroku', 'cloudflare'],
-            'machine learning': ['ml', 'machine learning', 'deep learning', 'neural', 'tensorflow', 'scikit', 'pytorch', 'ai', 'artificial intelligence'],
-            'data analysis': ['data analysis', 'analytics', 'excel', 'tableau', 'powerbi', 'looker', 'data viz'],
-            'api': ['api', 'rest', 'graphql', 'microservice', 'soap', 'grpc'],
-            'ci/cd': ['ci/cd', 'jenkins', 'gitlab', 'github actions', 'devops', 'circleci', 'travis'],
-            'frontend': ['html', 'css', 'frontend', 'ui/ux', 'responsive', 'sass', 'bootstrap'],
-            'backend': ['backend', 'server', 'database', 'api', 'microservice', 'rest'],
-            'testing': ['testing', 'pytest', 'jest', 'unittest', 'tdd', 'qa', 'selenium'],
+            'python': ['python', 'py', 'django', 'flask', 'fastapi', 'numpy', 'pandas', 'scikit-learn', 'scipy', 'matplotlib'],
+            'java': ['java', 'spring', 'maven', 'junit', 'gradle', 'hibernate', 'jpa', 'kotlin'],
+            'sql': ['sql', 'mysql', 'postgresql', 'tsql', 'oracle', 'database', 'db', 'nosql', 'mongodb', 'redis', 'elasticsearch'],
+            'javascript': ['javascript', 'js', 'react', 'nodejs', 'typescript', 'ts', 'vue', 'angular', 'nextjs', 'svelte', 'jquery'],
+            'docker': ['docker', 'kubernetes', 'container', 'k8s', 'podman', 'compose', 'helm'],
+            'aws': ['aws', 'amazon', 'ec2', 's3', 'lambda', 'rds', 'sqs', 'sns', 'athena', 'dynamodb'],
+            'cloud': ['cloud', 'azure', 'gcp', 'google cloud', 'heroku', 'cloudflare', 'digitalocean'],
+            'machine learning': ['ml', 'machine learning', 'deep learning', 'neural', 'tensorflow', 'scikit', 'pytorch', 'ai', 'artificial intelligence', 'nlp', 'computer vision'],
+            'data analysis': ['data analysis', 'analytics', 'excel', 'tableau', 'powerbi', 'looker', 'data viz', 'statistics', 'sas'],
+            'api': ['api', 'rest', 'graphql', 'microservice', 'soap', 'grpc', 'postman', 'swagger'],
+            'ci/cd': ['ci/cd', 'jenkins', 'gitlab', 'github actions', 'devops', 'circleci', 'travis', 'ansible', 'terraform'],
+            'frontend': ['html', 'css', 'frontend', 'ui/ux', 'responsive', 'sass', 'bootstrap', 'tailwind', 'material ui', 'webpack'],
+            'backend': ['backend', 'server', 'database', 'api', 'microservice', 'rest', 'auth', 'scaling'],
+            'testing': ['testing', 'pytest', 'jest', 'unittest', 'tdd', 'qa', 'selenium', 'cypress', 'playwright'],
             'git': ['git', 'github', 'gitlab', 'bitbucket', 'version control', 'scm'],
+            'mobile': ['flutter', 'react native', 'swift', 'ios', 'android', 'dart', 'xcode', 'kotlin'],
+            'data engineering': ['spark', 'hadoop', 'kafka', 'airflow', 'etl', 'bigquery', 'snowflake', 'dbt'],
+            'linux': ['linux', 'bash', 'shell', 'ubuntu', 'debian', 'centos', 'unix', 'powershell'],
+            'soft skills': ['leadership', 'agile', 'scrum', 'project management', 'communication', 'teamwork', 'problem solving', 'mentoring'],
+            'web': ['html5', 'css3', 'jquery', 'bootstrap', 'web design', 'saas', 'seo'],
+            'security': ['security', 'cybersecurity', 'encryption', 'auth', 'oauth', 'pentest', 'firewall'],
+            'languages': ['c++', 'c#', 'golang', 'ruby', 'ruby on rails', 'php', 'rust', 'scala', 'r language'],
         }
         
         self.seniority_levels = {
@@ -61,6 +68,15 @@ class SemanticMatcher:
             
             if score > 0:
                 skill_scores[skill] = min(score, 5)
+        
+        # Dynamic extraction for potential skills (capitalized words in text)
+        potential_skills = re.findall(r'\b[A-Z][a-zA-Z0-9+#]+(?:\s[A-Z][a-zA-Z0-9+#]+)*\b', text)
+        for ps in potential_skills:
+            ps_lower = ps.lower()
+            if len(ps_lower) > 2 and ps_lower not in skill_scores:
+                # Basic check to avoid common noise
+                if ps_lower not in ['the', 'this', 'that', 'with', 'from', 'using', 'work', 'experience']:
+                    skill_scores[ps_lower] = 1
         
         return skill_scores
     

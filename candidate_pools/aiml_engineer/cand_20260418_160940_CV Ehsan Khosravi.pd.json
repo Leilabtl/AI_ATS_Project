@@ -1,0 +1,27 @@
+{
+  "candidate_id": "cand_20260418_160940_CV Ehsan Khosravi.pd",
+  "filename": "CV Ehsan Khosravi.pdf",
+  "email": "ehsan.khosravi.8409@gmail.com",
+  "final_score": 51.0,
+  "job_id": "job_20260418_160940",
+  "job_title": "AI/ML Engineer",
+  "cv_seniority": "junior",
+  "matched_skills": [
+    "machine learning"
+  ],
+  "missing_skills": [],
+  "confidence_level": "Low",
+  "category": "unassigned",
+  "added_date": "2026-04-18T16:09:40.979036",
+  "skill_proficiency": {
+    "machine learning": "Not Determined"
+  },
+  "score_breakdown": {
+    "semantic_similarity": 2.2,
+    "skills_match": 100.0,
+    "experience_relevance": 90,
+    "keyword_density": 42.6,
+    "culture_fit": 36,
+    "seniority_alignment": 70
+  }
+}

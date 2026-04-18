@@ -1,0 +1,27 @@
+{
+  "candidate_id": "cand_20260418_165138_mohsen jedi job CV.p",
+  "filename": "mohsen jedi job CV.pdf.pdf (1).pdf",
+  "email": "jeddimohsen2@gmail.com",
+  "final_score": 49.8,
+  "job_id": "job_20260418_165138",
+  "job_title": "AI/ML Engineer",
+  "cv_seniority": "junior",
+  "matched_skills": [
+    "machine learning"
+  ],
+  "missing_skills": [],
+  "confidence_level": "Very Low",
+  "category": "unassigned",
+  "added_date": "2026-04-18T16:51:38.548788",
+  "skill_proficiency": {
+    "machine learning": "Not Determined"
+  },
+  "score_breakdown": {
+    "semantic_similarity": 1.4,
+    "skills_match": 100.0,
+    "experience_relevance": 90,
+    "keyword_density": 32.5,
+    "culture_fit": 48,
+    "seniority_alignment": 70
+  }
+}

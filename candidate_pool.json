@@ -251,6 +251,554 @@
         "culture_fit": 24,
         "seniority_alignment": 70
       }
+    },
+    {
+      "candidate_id": "cand_20260418_160731_mohsen jedi job CV.p",
+      "filename": "mohsen jedi job CV.pdf.pdf (1).pdf",
+      "email": "jeddimohsen2@gmail.com",
+      "final_score": 49.8,
+      "job_id": "job_20260418_160731",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Very Low",
+      "category": "rejected",
+      "added_date": "2026-04-18T16:07:31.388726",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 1.4,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 32.5,
+        "culture_fit": 48,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_160731_CV Ehsan Khosravi.pd",
+      "filename": "CV Ehsan Khosravi.pdf",
+      "email": "ehsan.khosravi.8409@gmail.com",
+      "final_score": 51.0,
+      "job_id": "job_20260418_160731",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Low",
+      "category": "longlist",
+      "added_date": "2026-04-18T16:07:31.393671",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 2.2,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 42.6,
+        "culture_fit": 36,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_160816_mohsen jedi job CV.p",
+      "filename": "mohsen jedi job CV.pdf.pdf (1).pdf",
+      "email": "jeddimohsen2@gmail.com",
+      "final_score": 49.8,
+      "job_id": "job_20260418_160816",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Very Low",
+      "category": "rejected",
+      "added_date": "2026-04-18T16:08:16.276350",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 1.4,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 32.5,
+        "culture_fit": 48,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_160816_CV Ehsan Khosravi.pd",
+      "filename": "CV Ehsan Khosravi.pdf",
+      "email": "ehsan.khosravi.8409@gmail.com",
+      "final_score": 51.0,
+      "job_id": "job_20260418_160816",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Low",
+      "category": "longlist",
+      "added_date": "2026-04-18T16:08:16.280950",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 2.2,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 42.6,
+        "culture_fit": 36,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_160940_mohsen jedi job CV.p",
+      "filename": "mohsen jedi job CV.pdf.pdf (1).pdf",
+      "email": "jeddimohsen2@gmail.com",
+      "final_score": 49.8,
+      "job_id": "job_20260418_160940",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Very Low",
+      "category": "rejected",
+      "added_date": "2026-04-18T16:09:40.975195",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 1.4,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 32.5,
+        "culture_fit": 48,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_160940_CV Ehsan Khosravi.pd",
+      "filename": "CV Ehsan Khosravi.pdf",
+      "email": "ehsan.khosravi.8409@gmail.com",
+      "final_score": 51.0,
+      "job_id": "job_20260418_160940",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Low",
+      "category": "longlist",
+      "added_date": "2026-04-18T16:09:40.979036",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 2.2,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 42.6,
+        "culture_fit": 36,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_161608_mohsen jedi job CV.p",
+      "filename": "mohsen jedi job CV.pdf.pdf (1).pdf",
+      "email": "jeddimohsen2@gmail.com",
+      "final_score": 49.8,
+      "job_id": "job_20260418_161608",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Very Low",
+      "category": "rejected",
+      "added_date": "2026-04-18T16:16:08.202440",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 1.4,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 32.5,
+        "culture_fit": 48,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_161608_CV Ehsan Khosravi.pd",
+      "filename": "CV Ehsan Khosravi.pdf",
+      "email": "ehsan.khosravi.8409@gmail.com",
+      "final_score": 51.0,
+      "job_id": "job_20260418_161608",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Low",
+      "category": "longlist",
+      "added_date": "2026-04-18T16:16:08.209398",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 2.2,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 42.6,
+        "culture_fit": 36,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_163916_CV Ehsan Khosravi.pd",
+      "filename": "CV Ehsan Khosravi.pdf",
+      "email": "ehsan.khosravi.8409@gmail.com",
+      "final_score": 51.0,
+      "job_id": "job_20260418_163916",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Low",
+      "category": "longlist",
+      "added_date": "2026-04-18T16:39:16.660872",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 2.2,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 42.6,
+        "culture_fit": 36,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_163916_mohsen jedi job CV.p",
+      "filename": "mohsen jedi job CV.pdf.pdf (1).pdf",
+      "email": "jeddimohsen2@gmail.com",
+      "final_score": 49.8,
+      "job_id": "job_20260418_163916",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Very Low",
+      "category": "rejected",
+      "added_date": "2026-04-18T16:39:16.668566",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 1.4,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 32.5,
+        "culture_fit": 48,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_165138_mohsen jedi job CV.p",
+      "filename": "mohsen jedi job CV.pdf.pdf (1).pdf",
+      "email": "jeddimohsen2@gmail.com",
+      "final_score": 49.8,
+      "job_id": "job_20260418_165138",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Very Low",
+      "category": "rejected",
+      "added_date": "2026-04-18T16:51:38.548788",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 1.4,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 32.5,
+        "culture_fit": 48,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_165138_CV Ehsan Khosravi.pd",
+      "filename": "CV Ehsan Khosravi.pdf",
+      "email": "ehsan.khosravi.8409@gmail.com",
+      "final_score": 51.0,
+      "job_id": "job_20260418_165138",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Low",
+      "category": "longlist",
+      "added_date": "2026-04-18T16:51:38.554238",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 2.2,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 42.6,
+        "culture_fit": 36,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_165443_CV Ehsan Khosravi.pd",
+      "filename": "CV Ehsan Khosravi.pdf",
+      "email": "ehsan.khosravi.8409@gmail.com",
+      "final_score": 51.0,
+      "job_id": "job_20260418_165443",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Low",
+      "category": "longlist",
+      "added_date": "2026-04-18T16:54:43.771918",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 2.2,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 42.6,
+        "culture_fit": 36,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_165443_mohsen jedi job CV.p",
+      "filename": "mohsen jedi job CV.pdf.pdf (1).pdf",
+      "email": "jeddimohsen2@gmail.com",
+      "final_score": 49.8,
+      "job_id": "job_20260418_165443",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Very Low",
+      "category": "rejected",
+      "added_date": "2026-04-18T16:54:43.779783",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 1.4,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 32.5,
+        "culture_fit": 48,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_165806_mohsen jedi job CV.p",
+      "filename": "mohsen jedi job CV.pdf.pdf (1).pdf",
+      "email": "jeddimohsen2@gmail.com",
+      "final_score": 49.8,
+      "job_id": "job_20260418_165806",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Very Low",
+      "category": "rejected",
+      "added_date": "2026-04-18T16:58:06.619576",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 1.4,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 32.5,
+        "culture_fit": 48,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_165806_CV Ehsan Khosravi.pd",
+      "filename": "CV Ehsan Khosravi.pdf",
+      "email": "ehsan.khosravi.8409@gmail.com",
+      "final_score": 51.0,
+      "job_id": "job_20260418_165806",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Low",
+      "category": "longlist",
+      "added_date": "2026-04-18T16:58:06.626935",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 2.2,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 42.6,
+        "culture_fit": 36,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_170540_CV Ehsan Khosravi.pd",
+      "filename": "CV Ehsan Khosravi.pdf",
+      "email": "ehsan.khosravi.8409@gmail.com",
+      "final_score": 51.0,
+      "job_id": "job_20260418_170540",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Low",
+      "category": "longlist",
+      "added_date": "2026-04-18T17:05:40.132252",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 2.2,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 42.6,
+        "culture_fit": 36,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_170540_mohsen jedi job CV.p",
+      "filename": "mohsen jedi job CV.pdf.pdf (1).pdf",
+      "email": "jeddimohsen2@gmail.com",
+      "final_score": 49.8,
+      "job_id": "job_20260418_170540",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Very Low",
+      "category": "rejected",
+      "added_date": "2026-04-18T17:05:40.138713",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 1.4,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 32.5,
+        "culture_fit": 48,
+        "seniority_alignment": 70
+      }
+    },
+    {
+      "candidate_id": "cand_20260418_171350_CV Ehsan Khosravi.pd",
+      "filename": "CV Ehsan Khosravi.pdf",
+      "email": "ehsan.khosravi.8409@gmail.com",
+      "final_score": 50.9,
+      "job_id": "job_20260418_171350",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Low",
+      "category": "longlist",
+      "added_date": "2026-04-18T17:13:50.494138",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 2.2,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 42.4,
+        "culture_fit": 36,
+        "seniority_alignment": 70
+      },
+      "strategic_summary": "Significant gaps detected in core requirements and technical alignment.",
+      "improvement_areas": [
+        "Seniority: Level mismatch (junior vs unspecified)"
+      ]
+    },
+    {
+      "candidate_id": "cand_20260418_171350_mohsen jedi job CV.p",
+      "filename": "mohsen jedi job CV.pdf.pdf (1).pdf",
+      "email": "jeddimohsen2@gmail.com",
+      "final_score": 49.8,
+      "job_id": "job_20260418_171350",
+      "job_title": "AI/ML Engineer",
+      "cv_seniority": "junior",
+      "matched_skills": [
+        "machine learning"
+      ],
+      "missing_skills": [],
+      "confidence_level": "Very Low",
+      "category": "rejected",
+      "added_date": "2026-04-18T17:13:50.501607",
+      "skill_proficiency": {
+        "machine learning": "Not Determined"
+      },
+      "score_breakdown": {
+        "semantic_similarity": 1.4,
+        "skills_match": 100.0,
+        "experience_relevance": 90,
+        "keyword_density": 32.5,
+        "culture_fit": 48,
+        "seniority_alignment": 70
+      },
+      "strategic_summary": "Significant gaps detected in core requirements and technical alignment.",
+      "improvement_areas": [
+        "Seniority: Level mismatch (junior vs unspecified)"
+      ]
     }
   ],
   "jobs": [
@@ -295,6 +843,116 @@
       "candidate_count": 1,
       "shortlist_count": 0,
       "longlist_count": 0,
+      "folder": "candidate_pools\\aiml_engineer"
+    },
+    {
+      "job_id": "job_20260418_160731",
+      "title": "AI/ML Engineer",
+      "description": "Develop ML models, optimize algorithms, and deploy scalable AI solutions in production.",
+      "min_score": 50,
+      "created_date": "2026-04-18T16:07:31.384570",
+      "candidate_count": 2,
+      "shortlist_count": 0,
+      "longlist_count": 1,
+      "folder": "candidate_pools\\aiml_engineer"
+    },
+    {
+      "job_id": "job_20260418_160816",
+      "title": "AI/ML Engineer",
+      "description": "Develop ML models, optimize algorithms, and deploy scalable AI solutions in production.",
+      "min_score": 50,
+      "created_date": "2026-04-18T16:08:16.272922",
+      "candidate_count": 2,
+      "shortlist_count": 0,
+      "longlist_count": 1,
+      "folder": "candidate_pools\\aiml_engineer"
+    },
+    {
+      "job_id": "job_20260418_160940",
+      "title": "AI/ML Engineer",
+      "description": "Develop ML models, optimize algorithms, and deploy scalable AI solutions in production.",
+      "min_score": 50,
+      "created_date": "2026-04-18T16:09:40.972281",
+      "candidate_count": 2,
+      "shortlist_count": 0,
+      "longlist_count": 1,
+      "folder": "candidate_pools\\aiml_engineer"
+    },
+    {
+      "job_id": "job_20260418_161608",
+      "title": "AI/ML Engineer",
+      "description": "Develop ML models, optimize algorithms, and deploy scalable AI solutions in production.",
+      "min_score": 50,
+      "created_date": "2026-04-18T16:16:08.197724",
+      "candidate_count": 2,
+      "shortlist_count": 0,
+      "longlist_count": 1,
+      "folder": "candidate_pools\\aiml_engineer"
+    },
+    {
+      "job_id": "job_20260418_163916",
+      "title": "AI/ML Engineer",
+      "description": "Develop ML models, optimize algorithms, and deploy scalable AI solutions in production.",
+      "min_score": 50,
+      "created_date": "2026-04-18T16:39:16.654927",
+      "candidate_count": 2,
+      "shortlist_count": 0,
+      "longlist_count": 1,
+      "folder": "candidate_pools\\aiml_engineer"
+    },
+    {
+      "job_id": "job_20260418_165138",
+      "title": "AI/ML Engineer",
+      "description": "Develop ML models, optimize algorithms, and deploy scalable AI solutions in production.",
+      "min_score": 50,
+      "created_date": "2026-04-18T16:51:38.544968",
+      "candidate_count": 2,
+      "shortlist_count": 0,
+      "longlist_count": 1,
+      "folder": "candidate_pools\\aiml_engineer"
+    },
+    {
+      "job_id": "job_20260418_165443",
+      "title": "AI/ML Engineer",
+      "description": "Develop ML models, optimize algorithms, and deploy scalable AI solutions in production.",
+      "min_score": 50,
+      "created_date": "2026-04-18T16:54:43.767327",
+      "candidate_count": 2,
+      "shortlist_count": 0,
+      "longlist_count": 1,
+      "folder": "candidate_pools\\aiml_engineer"
+    },
+    {
+      "job_id": "job_20260418_165806",
+      "title": "AI/ML Engineer",
+      "description": "Develop ML models, optimize algorithms, and deploy scalable AI solutions in production.",
+      "min_score": 50,
+      "created_date": "2026-04-18T16:58:06.615136",
+      "candidate_count": 2,
+      "shortlist_count": 0,
+      "longlist_count": 1,
+      "folder": "candidate_pools\\aiml_engineer"
+    },
+    {
+      "job_id": "job_20260418_170540",
+      "title": "AI/ML Engineer",
+      "description": "Develop ML models, optimize algorithms, and deploy scalable AI solutions in production.",
+      "min_score": 50,
+      "created_date": "2026-04-18T17:05:40.126310",
+      "candidate_count": 2,
+      "shortlist_count": 0,
+      "longlist_count": 1,
+      "folder": "candidate_pools\\aiml_engineer"
+    },
+    {
+      "job_id": "job_20260418_171350",
+      "title": "AI/ML Engineer",
+      "description": "Develop ML models, optimize algorithms, and deploy scalable AI solutions in production.",
+      "min_score": 50,
+      "created_date": "2026-04-18T17:13:50.485588",
+      "candidate_count": 2,
+      "shortlist_count": 0,
+      "longlist_count": 1,
       "folder": "candidate_pools\\aiml_engineer"
     }
   ]

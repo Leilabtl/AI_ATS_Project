@@ -116,6 +116,8 @@ class CandidatePool:
             'added_date': datetime.now().isoformat(),
             'skill_proficiency': result.get('skill_proficiency', {}),
             'score_breakdown': result.get('score_breakdown', {}),
+            'strategic_summary': result.get('strategic_summary', 'No summary available.'),
+            'improvement_areas': result.get('improvement_areas', []),
         }
         self.pool['candidates'].append(candidate_entry)
 

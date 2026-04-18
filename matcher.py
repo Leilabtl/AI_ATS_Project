@@ -143,7 +143,8 @@ class EnhancedMatcher:
         elif proficiency_scores['junior'] > 0:
             return 'Junior'
         else:
-            return 'Not Determined'
+            # Fallback to general seniority if specified
+            return self.matcher.extract_seniority_level(cv_text).title() if self.matcher.extract_seniority_level(cv_text) != 'unspecified' else 'Not Determined'
     
     def match_cv_to_job(self, cv_path, job_description, cv_name=""):
         """Enhanced matching with detailed analysis."""
@@ -200,8 +201,58 @@ class EnhancedMatcher:
             'all_job_skills': analysis['job_skills'],
             'cv_seniority': analysis['cv_seniority'],
             'job_seniority': analysis['job_seniority'],
-            'candidate_email': candidate_email,  # Add email extraction
+            'candidate_email': candidate_email,
+            'strategic_summary': self.generate_strategic_summary(analysis, final_score),
+            'improvement_areas': self.generate_improvement_areas(analysis)
         }
+
+    def generate_strategic_summary(self, analysis, score):
+        """Generate a detailed, nuanced summary of the match."""
+        matched_str = ', '.join(list(analysis['matched_skills'].keys())[:3])
+        missing_str = ', '.join(list(analysis['missing_skills'].keys())[:2])
+        
+        if score >= 85:
+            summary = f"**Exceptional candidate** with {score}% alignment. "
+            summary += f"Strong mastery of core skills: {matched_str}. "
+            summary += f"Demonstrates {analysis['culture_fit']}% culture alignment and matches the required {analysis['job_seniority']} seniority profile."
+            return summary
+        elif score >= 70:
+            summary = f"**Strong potential candidate** ({score}%). "
+            summary += f"Excellent fit in {matched_str}. "
+            if missing_str:
+                summary += f"Consider discussing {missing_str} during the interview. "
+            summary += f"Strong semantic relevance ({analysis['semantic_similarity']}%)."
+            return summary
+        elif score >= 50:
+            summary = f"**Moderate match candidate** ({score}%). "
+            summary += f"Has foundational knowledge in {matched_str or 'relevant areas'}. "
+            if missing_str:
+                summary += f"Significant technical gaps identified in {missing_str}. "
+            summary += "May requires more intensive onboarding or mentorship."
+            return summary
+        else:
+            return f"**Low alignment** ({score}%). Significant mismatch in core technical requirements ({analysis['skills_match']}% skill match) and experience profile."
+
+    def generate_improvement_areas(self, analysis):
+        """Synthesize specific, actionable areas for candidate improvement."""
+        areas = []
+        if analysis['missing_skills']:
+            skills = list(analysis['missing_skills'].keys())[:3]
+            areas.append(f"Critical Technical Gap: Missing key JD requirements: {', '.join(skills)}")
+        
+        if analysis['seniority_alignment'] < 80:
+            areas.append(f"Seniority Imbalance: Candidate ({analysis['cv_seniority']}) vs Requirement ({analysis['job_seniority']})")
+            
+        if analysis['culture_fit'] < 60:
+            areas.append("Soft Skill Alignment: Resume lacks indicators for key collaborative or leadership behaviors mentioned in JD.")
+            
+        if analysis['experience_relevance'] < 60:
+            areas.append("Experience Depth: Industry-specific professional experience markers appear limited for this role level.")
+            
+        if analysis['semantic_similarity'] < 40:
+            areas.append("Contextual Alignment: Low semantic overlap suggests the resume may be too general or focused on a different domain.")
+            
+        return areas
 
 
 def match_cv_to_job(cv_path, job_description):

@@ -173,6 +173,19 @@ class ReportGenerator:
         story.append(score_table)
         story.append(Spacer(1, 0.15*inch))
         
+        # Strategic Assessment
+        story.append(Paragraph("STRATEGIC ASSESSMENT", heading_style))
+        story.append(Paragraph(f"<b>Summary:</b> {result.get('strategic_summary', 'N/A')}", styles['Normal']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        if result.get('improvement_areas'):
+            story.append(Paragraph("AREAS FOR IMPROVEMENT", heading_style))
+            for area in result['improvement_areas']:
+                story.append(Paragraph(f"• {area}", styles['Normal']))
+            story.append(Spacer(1, 0.1*inch))
+            
+        story.append(Spacer(1, 0.15*inch))
+
         # Score Breakdown
         story.append(Paragraph("SCORING BREAKDOWN", heading_style))
         breakdown_data = [
@@ -468,60 +481,6 @@ TalentScout Pro System"""
         report.append("=" * 90)
         
         return "\n".join(report)
-    
-    def generate_comprehensive_csv(self, results, job_description, longlist_count=None, shortlist_count=None):
-        """Generate comprehensive CSV with all candidate details."""
-        
-        data = []
-        
-        for idx, result in enumerate(results, 1):
-            candidate_data = {
-                # Basic Info
-                'Rank': idx,
-                'Candidate_Name': result['filename'],
-                'Analysis_Date': self.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-                
-                # Overall Score
-                'Final_Score': result['final_score'],
-                'Confidence_Level': result['confidence_level'],
-                
-                # Score Breakdown
-                'Semantic_Match_%': result['score_breakdown']['semantic_similarity'],
-                'Skills_Match_%': result['score_breakdown']['skills_match'],
-                'Experience_Relevance_%': result['score_breakdown']['experience_relevance'],
-                'Keyword_Density_%': result['score_breakdown']['keyword_density'],
-                'Culture_Fit_%': result['score_breakdown']['culture_fit'],
-                'Seniority_Alignment_%': result['score_breakdown']['seniority_alignment'],
-                
-                # Seniority
-                'Candidate_Level': result['cv_seniority'].title(),
-                'Required_Level': result['job_seniority'].title(),
-                
-                # Skills
-                'Matched_Skills_Count': len(result['matched_skills']),
-                'Matched_Skills': '; '.join([s.title() for s in result['matched_skills']]),
-                'Missing_Skills_Count': len(result['missing_skills']),
-                'Missing_Skills': '; '.join([s.title() for s in result['missing_skills']]),
-                
-                # Proficiency
-                'Skill_Proficiency_Details': json.dumps(result['skill_proficiency']),
-                
-                # Recommendations
-                'Learning_Goals_Count': len(result['recommendations']),
-                'Top_Learning_Goal': result['recommendations'][0]['skill'].title() if result['recommendations'] else 'None',
-                
-                # Bias Warnings
-                'Bias_Warnings_Count': len(result['bias_warnings']),
-                'Bias_Warnings': '; '.join([f"{w[0]} ({w[1]})" for w in result['bias_warnings']]) if result['bias_warnings'] else 'None',
-                
-                # Status
-                'Recommendation': self._get_recommendation(result['final_score']),
-            }
-            
-            data.append(candidate_data)
-        
-        df = pd.DataFrame(data)
-        return df
     
     def generate_detailed_candidate_report(self, result):
         """Generate a detailed text report for a single candidate."""
