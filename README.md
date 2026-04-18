@@ -25,15 +25,23 @@ HR Compass is a state-of-the-art recruitment tool built for the **AI In Practice
 - **BCC Batching:** Generate recipient lists ready for your email client's BCC field to maintain privacy.
 - **Employer Branding:** Ensures consistent and high-quality communication with every applicant.
 
-### 4. 📦 High-Scale Batch Processing
+### 4. 🌐 Candidate Pool Management
+The system includes a persistent pool to manage candidates across different job openings and timeframes.
+- **Cross-Job Storage:** Candidates are stored and categorized globally, allowing for easy re-matching when new roles open.
+- **Job Recommendations:** Automatically suggests other open roles for candidates based on their specific skill sets.
+- **Statistics & Insights:** Real-time analytics on average scores, seniority distribution, and pool growth.
+- **Folder Organization:** Automatically creates structured folders (`candidate_pools/`) to keep candidate data organized by job title.
+- **Persistent Data:** All pool data is saved locally in `candidate_pool.json`, ensuring no data loss between sessions.
+
+### 5. 📦 High-Scale Batch Processing
 - **Multi-CV Upload:** Support for uploading 50-500+ resumes simultaneously.
 - **Fast Analysis:** Processing speeds of ~1-2 seconds per candidate.
 - **Memory Optimization:** Built to handle large datasets efficiently within browser environments.
 
-### 5. 🛠️ Advanced Tools
-- **Candidate Pool Management:** Manage and search candidates across multiple job roles.
+### 6. 🛠️ Advanced Tools
 - **Proactive Tagging:** Automatic tagging of candidates based on detected expertise levels.
 - **Role Dictionary:** Pre-configured and customizable job titles for quick setup.
+- **Explainable Analytics:** Detailed breakdown of match scores.
 
 ---
 
