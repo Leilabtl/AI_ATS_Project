@@ -12,51 +12,63 @@ class EnhancedMatcher:
         self.skill_intel = {
             'python': {
                 'importance': 'Foundational for modern backend and data systems.',
-                'roadmap': 'Focus on Advanced Python (Decorators, Generators), AsyncIO for performance, and Packaging (Poetry/Pipenv). Study Django or FastAPI for rest services.'
+                'roadmap': 'Focus on Advanced Python (Decorators, Generators), AsyncIO for performance, and Packaging (Poetry/Pipenv). Study Django or FastAPI for rest services.',
+                'impact': 'Critical for backend stability and automation.'
             },
             'machine learning': {
                 'importance': 'Core for intelligent features and predictive analytics.',
-                'roadmap': 'Learn Scikit-Learn pipelines, Deep Learning with PyTorch or TensorFlow, and MLOps principles (model monitoring, versioning with DVC).'
+                'roadmap': 'Learn Scikit-Learn pipelines, Deep Learning with PyTorch or TensorFlow, and MLOps principles (model monitoring, versioning with DVC).',
+                'impact': 'High value for predictive business logic.'
             },
             'sql': {
                 'importance': 'Essential for data persistence and complex querying.',
-                'roadmap': 'Master Window Functions, Query Optimization (EXPLAIN ANALYZE), and Database Schema Design (Normalization vs Denormalization).'
+                'roadmap': 'Master Window Functions, Query Optimization (EXPLAIN ANALYZE), and Database Schema Design (Normalization vs Denormalization).',
+                'impact': 'Vital for data integrity and accurate reporting.'
             },
             'aws': {
                 'importance': 'Primary infrastructure for scalable deployments.',
-                'roadmap': 'Get certified as AWS Solutions Architect. Focus on Lambda (Serverless), S3, RDS, and IAM security policies.'
+                'roadmap': 'Get certified as AWS Solutions Architect. Focus on Lambda (Serverless), S3, RDS, and IAM security policies.',
+                'impact': 'Essential for cloud scalability and security.'
             },
             'docker': {
                 'importance': 'Standard for environment consistency and CI/CD.',
-                'roadmap': 'Learn Multi-stage builds, Docker Compose for local dev, and Container Security (scanning for vulnerabilities).'
+                'roadmap': 'Learn Multi-stage builds, Docker Compose for local dev, and Container Security (scanning for vulnerabilities).',
+                'impact': 'Critical for deployment reliability.'
             },
             'kubernetes': {
                 'importance': 'Orchestration for large-scale microservices.',
-                'roadmap': 'Study Pod lifecycle, Services, Ingress Controllers, and Helm Charts for deployment automation.'
+                'roadmap': 'Study Pod lifecycle, Services, Ingress Controllers, and Helm Charts for deployment automation.',
+                'impact': 'High impact on system orchestration.'
             },
             'ci/cd': {
                 'importance': 'Enables fast and reliable software delivery.',
-                'roadmap': 'Learn to build pipelines in GitHub Actions or GitLab CI. Focus on automated testing, linting, and blue-green deployments.'
+                'roadmap': 'Learn to build pipelines in GitHub Actions or GitLab CI. Focus on automated testing, linting, and blue-green deployments.',
+                'impact': 'Vital for engineering velocity.'
             },
             'javascript': {
                 'importance': 'Critical for building interactive user interfaces.',
-                'roadmap': 'Master ES6+ features, React (Hooks/Context), and State Management (Redux/Zustand).'
+                'roadmap': 'Master ES6+ features, React (Hooks/Context), and State Management (Redux/Zustand).',
+                'impact': 'Primary for modern web user experience.'
             },
             'c++': {
                 'importance': 'Required for high-performance systems and low-level optimization.',
-                'roadmap': 'Study Modern C++ (C++17/20), Memory Management (Smart Pointers), and STL containers optimization.'
+                'roadmap': 'Study Modern C++ (C++17/20), Memory Management (Smart Pointers), and STL containers optimization.',
+                'impact': 'Critical for performance-sensitive tasks.'
             },
             'golang': {
                 'importance': 'Preferred for high-concurrency microservices.',
-                'roadmap': 'Learn Goroutines and Channels, Interface-based design, and standard library net/http for APIs.'
+                'roadmap': 'Learn Goroutines and Channels, Interface-based design, and standard library net/http for APIs.',
+                'impact': 'Essential for high-scale microservices.'
             },
             'rust': {
                 'importance': 'Ensures memory safety and performance.',
-                'roadmap': 'Master Ownership and Borrowing rules, Error handling (Result/Option), and the Cargo ecosystem.'
+                'roadmap': 'Master Ownership and Borrowing rules, Error handling (Result/Option), and the Cargo ecosystem.',
+                'impact': 'High value for secure, fast systems.'
             },
             'data engineering': {
                 'importance': 'Vital for building reliable data pipelines.',
-                'roadmap': 'Study Apache Spark for big data, Airflow for orchestration, and Snowflake for cloud warehousing.'
+                'roadmap': 'Study Apache Spark for big data, Airflow for orchestration, and Snowflake for cloud warehousing.',
+                'impact': 'Fundamental for data-driven decisions.'
             }
         }
         self.male_names = ['john', 'michael', 'david', 'james', 'robert', 'ali', 'ahmed', 'carlos', 'sergei', 'wei']
@@ -126,21 +138,34 @@ class EnhancedMatcher:
     def get_skill_gap_recommendations(self, missing_skills, matched_skills, analysis):
         """Generate detailed, actionable learning roadmap for gaps."""
         recommendations = []
-        for skill in list(missing_skills.keys())[:5]:
-            # Pull from our new skill_intel mapping for depth
+        
+        # Determine priority based on JD importance
+        for skill in missing_skills:
+            if len(skill) < 2: continue # Extra safety against single-letter garbage
+            
             intel = self.skill_intel.get(skill.lower(), {
-                'importance': f'Key technical requirement for effective performance in this role.',
-                'roadmap': f'Acquire foundational knowledge and build a practical portfolio project involving {skill.title()}.'
+                'importance': f'Specific technical requirement for {skill}.',
+                'roadmap': f'Acquire hands-on experience by building a small project using {skill}. Focus on core concepts and integration patterns.',
+                'impact': 'Technical alignment'
             })
+            
+            # Simple heuristic for effort: 4 for complex, 2 for tools, 3 for languages
+            effort = 3
+            if skill.lower() in ['python', 'java', 'c++', 'c#', 'rust', 'machine learning', 'pytorch', 'tensorflow']:
+                effort = 4
+            elif skill.lower() in ['git', 'docker', 'jira', 'confluence', 'vba']:
+                effort = 2
             
             recommendations.append({
                 'skill': skill,
-                'priority': 'high' if skill in ['python', 'sql', 'machine learning', 'aws', 'docker'] else 'medium',
-                'suggestion': f"{intel['importance']} {intel['roadmap']}",
-                'time': '2-4 weeks' if len(skill) > 5 else '1 week'
+                'priority': 'high',  # Since it's a missing skill from JD
+                'suggestion': f"{intel.get('importance', 'Core proficiency')} {intel.get('roadmap', 'Focus on project-based learning.')}",
+                'impact': intel.get('impact', 'Career alignment'),
+                'effort': effort,
+                'time': '2-4 weeks' if effort > 2 else '1 week'
             })
         
-        return sorted(recommendations, key=lambda x: x['priority'] == 'high', reverse=True)
+        return sorted(recommendations, key=lambda x: x['effort'], reverse=True)
     
     def estimate_skill_proficiency(self, cv_text, skill_name):
         """Estimate candidate's proficiency level in a skill."""

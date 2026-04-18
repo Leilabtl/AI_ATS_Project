@@ -232,8 +232,14 @@ class ReportGenerator:
         # Recommendations
         if result['recommendations']:
             story.append(Paragraph("LEARNING RECOMMENDATIONS", heading_style))
-            for idx, rec in enumerate(result['recommendations'][:5], 1):
-                rec_text = f"<b>{idx}. {rec['skill'].upper()}</b><br/>Suggestion: {rec['suggestion']}<br/>Effort: {rec['effort']}/4 | Time: {rec['time']}"
+            for idx, rec in enumerate(result.get('recommendations', [])[:5], 1):
+                effort = rec.get('effort', 2)
+                time_est = rec.get('time', '1-2 weeks')
+                skill_name = rec.get('skill', 'Technology').upper()
+                suggestion = rec.get('suggestion', 'Review technical documentation.')
+                impact = rec.get('impact', 'Career Growth')
+                
+                rec_text = f"<b>{idx}. {skill_name}</b><br/>Suggestion: {suggestion}<br/>Impact: {impact}<br/>Effort: {effort}/4 | Time: {time_est}"
                 story.append(Paragraph(rec_text, styles['Normal']))
                 story.append(Spacer(1, 0.08*inch))
         
@@ -545,13 +551,18 @@ TalentScout Pro System"""
             report.append(f"LEARNING RECOMMENDATIONS ({len(result['recommendations'])} identified)")
             report.append("-" * 80)
             
-            for idx, rec in enumerate(result['recommendations'], 1):
-                priority_label = "HIGH" if rec['priority'] == 'high' else "MEDIUM"
-                report.append(f"\n{idx}. {rec['skill'].upper()} [{priority_label} PRIORITY]")
-                report.append(f"   Suggestion: {rec['suggestion']}")
-                report.append(f"   Effort Level: {rec['effort']}/4")
-                report.append(f"   Estimated Time: {rec['time']}")
-                report.append(f"   Development Impact: {rec['impact'].title()}")
+            for idx, rec in enumerate(result.get('recommendations', []), 1):
+                priority_label = "HIGH" if rec.get('priority') == 'high' else "MEDIUM"
+                skill_name = rec.get('skill', 'Unknown').upper()
+                effort = rec.get('effort', 'N/A')
+                time_est = rec.get('time', 'N/A')
+                impact = rec.get('impact', 'Technical Growth').title()
+                
+                report.append(f"\n{idx}. {skill_name} [{priority_label} PRIORITY]")
+                report.append(f"   Suggestion: {rec.get('suggestion', 'N/A')}")
+                report.append(f"   Effort Level: {effort}/4")
+                report.append(f"   Estimated Time: {time_est}")
+                report.append(f"   Development Impact: {impact}")
         
         # Bias Analysis
         if result['bias_warnings']:

@@ -760,6 +760,9 @@ with tab_pool:
 
 # Main content
 if process_button and job_title and job_description and uploaded_files:
+    # Clear previous results to prevent UI "ghosting"
+    st.session_state.results = []
+    
     progress_bar = st.progress(0)
     status_text = st.empty()
     
@@ -927,157 +930,119 @@ if st.session_state.results:
     st.markdown('<div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); margin: 2rem 0 1rem 0;">📊 Detailed Candidate Analysis</div>', unsafe_allow_html=True)
     
     for idx, result in enumerate(results_sorted, 1):
-        with st.expander(f"#{idx} - {result['filename']} ({result['confidence_level']}) 👤", expanded=(idx == 1)):
+        with st.expander(f"#{idx} - {result['filename']} ({result.get('confidence_level', 'Evaluated')}) 👤", expanded=(idx == 1)):
             
-            # Score visualization
-            final_score = result['final_score']
-            badge_class = "badge-excellent" if final_score >= 85 else "badge-good" if final_score >= 70 else "badge-mid" if final_score >= 40 else "badge-low"
-            
-            # Strategic Analysis Section
-            st.markdown(f"""
-            <div class="strategic-card">
-                <div class="strategic-summary">
-                    🎯 Strategic Analysis
-                </div>
-                <div style="font-size: 1rem; color: var(--text-main); line-height: 1.5; margin-bottom: 1rem;">
-                    {result.get('strategic_summary', 'No summary available.')}
-                </div>
-                <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
-                    Areas for Improvement
-                </div>
-                {" ".join([f'<div class="improvement-item"><span>⚠️</span> {area}</div>' for area in result.get('improvement_areas', [])]) if result.get('improvement_areas') else '<div class="improvement-item"><span>✅</span> No critical improvement areas detected.</div>'}
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Professional Score Display
-            st.markdown(f"""
-            <div style="text-align: center; padding: 2rem; background: var(--primary-light); border-radius: 12px; border: 1px solid #dbeafe; margin-bottom: 2rem;">
-                <div style="font-size: 3rem; margin-bottom: 0.5rem;">{result['confidence_emoji']}</div>
-                <div style="font-size: 2.5rem; font-weight: 700; color: #1e293b;">{final_score}% Match</div>
-                <div class="score-badge {badge_class}" style="display: inline-block; margin-top: 0.5rem;">{result['confidence_level']}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Professional Score Breakdown Cards
-            st.markdown("**📈 Scoring Breakdown:**")
-            st.markdown("""
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin: 1rem 0;">
-                <div class="metric-card">
-                    <div class="metric-lab">Semantic</div>
-                    <div class="metric-val" style="font-size: 1.5rem;">{:.1f}%</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-lab">Skills</div>
-                    <div class="metric-val" style="font-size: 1.5rem;">{:.1f}%</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-lab">Experience</div>
-                    <div class="metric-val" style="font-size: 1.5rem;">{:.1f}%</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-lab">Keywords</div>
-                    <div class="metric-val" style="font-size: 1.5rem;">{:.1f}%</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-lab">Culture</div>
-                    <div class="metric-val" style="font-size: 1.5rem;">{:.1f}%</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-lab">Seniority</div>
-                    <div class="metric-val" style="font-size: 1.5rem;">{:.1f}%</div>
-                </div>
-            </div>
-            """.format(
-                result['score_breakdown']['semantic_similarity'],
-                result['score_breakdown']['skills_match'],
-                result['score_breakdown']['experience_relevance'],
-                result['score_breakdown']['keyword_density'],
-                result['score_breakdown']['culture_fit'],
-                result['score_breakdown']['seniority_alignment']
-            ), unsafe_allow_html=True)
-            
-            st.caption("Formula: 35% Semantic + 25% Skills + 15% Experience + 15% Keywords + 5% Culture + 5% Seniority")
-            
-            st.divider()
-            
-            # Strategic Summary Card
+            # 1. Executive Summary & Rationale (Unified)
             if result.get('strategic_summary'):
                 st.markdown(f"""
-                <div style="background: #eef2ff; border: 1px solid #c7d2fe; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-                    <h3 style="margin-top: 0; color: #312e81; display: flex; align-items: center; gap: 8px;">
-                        <span>📋</span> Match Rationale & Executive Summary
+                <div style="background: #fdfcfe; border: 1px solid #e1e7ff; border-left: 5px solid #6366f1; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                    <h3 style="margin-top: 0; color: #1e1b4b; display: flex; align-items: center; gap: 8px; font-size: 1.25rem;">
+                        <span>📊</span> Match Rationale & Executive Summary
                     </h3>
                     <div style="color: #3730a3; font-size: 1.05rem; line-height: 1.6;">
                         {result['strategic_summary']}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
+
+            # 2. Performance Metrics
+            final_score = result['final_score']
+            badge_class = "badge-excellent" if final_score >= 85 else "badge-good" if final_score >= 70 else "badge-mid" if final_score >= 40 else "badge-low"
             
-            # Critical Improvement Areas (Detailed)
+            col_a, col_b = st.columns([1, 2])
+            with col_a:
+                st.markdown(f"""
+                <div style="text-align: center; padding: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
+                    <div style="font-size: 2rem; font-weight: 800; color: #0f172a;">{final_score}%</div>
+                    <div style="font-size: 0.8rem; text-transform: uppercase; color: #64748b; font-weight: 700; margin-top: 4px;">Match Score</div>
+                    <div class="score-badge {badge_class}" style="margin-top: 10px; display: inline-block;">{result.get('confidence_level', 'Evaluated')}</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col_b:
+                st.markdown("**📈 Scoring Breakdown**")
+                scores = result.get('score_breakdown', {})
+                breakdown_html = '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">'
+                for lab, val in [("Semantic", scores.get('semantic_similarity', 0)), 
+                                ("Skills", scores.get('skills_match', 0)), 
+                                ("Exp.", scores.get('experience_relevance', 0)),
+                                ("Keywords", scores.get('keyword_density', 0)),
+                                ("Culture", scores.get('culture_fit', 0)),
+                                ("Seniority", scores.get('seniority_alignment', 0))]:
+                    breakdown_html += f'<div style="background: #fff; padding: 6px; border: 1px solid #f1f5f9; border-radius: 6px; text-align: center;"><div style="font-size: 0.65rem; color: #64748b; font-weight: 700;">{lab}</div><div style="font-size: 0.9rem; font-weight: 700; color: #334155;">{val:.0f}%</div></div>'
+                breakdown_html += "</div>"
+                st.markdown(breakdown_html, unsafe_allow_html=True)
+
+            st.divider()
+
+            # 3. Gap Analysis & Roadmap
             if result.get('improvement_areas'):
-                st.markdown("### 🛠️ Strategic Gap Analysis & Learning Roadmap")
+                st.markdown("### 🛠️ Strategic Gap Analysis")
                 for area in result['improvement_areas']:
-                    st.markdown(f"""
-                    <div style="background: #fff; border: 1px solid #e2e8f0; border-left: 5px solid #6366f1; padding: 15px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                        {area}
-                    </div>
-                    """, unsafe_allow_html=True)
-            
-            st.divider()
-            
-            # Seniority info
-            seniority_match = "✅ Perfect alignment" if result['cv_seniority'] == result['job_seniority'] else "⚠️ Seniority mismatch"
-            st.info(f"**Candidate Level:** {result['cv_seniority'].title()} | **Required:** {result['job_seniority'].title()} - {seniority_match}")
-            
-            st.divider()
-            
-            # Matched skills with explanation
-            if result['matched_skills']:
-                st.markdown("### 🎯 Strategic Alignment & Rationale")
-                st.write("The candidate demonstrates verified expertise in the following key areas identified in the Job Description:")
-                
-                skills_html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px;">'
-                for skill in result['matched_skills']:
-                    proficiency = result['skill_proficiency'].get(skill, 'Verified')
-                    p_badge = "badge-excellent" if proficiency.lower() in ['expert', 'advanced'] else "badge-good" if proficiency.lower() == 'intermediate' else "badge-mid"
-                    skills_html += f"""
-                    <div class="score-badge {p_badge}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; border-radius: 10px; font-weight: 700; border: 1px solid rgba(0,0,0,0.05);">
-                        <span style="font-size: 0.95rem; text-align: center;">{skill.upper() if len(skill) <= 3 else skill.title()}</span>
-                        <span style="font-size: 0.7rem; opacity: 0.8; font-weight: 500; margin-top: 4px;">{proficiency}</span>
-                    </div>
-                    """
-                skills_html += '</div>'
-                st.markdown(skills_html, unsafe_allow_html=True)
-            else:
-                st.warning("🔍 No specific technical skills from the JD were identified in this resume. This suggests a potential career pivot or a significant mismatch in technical stack.")
-            
-            st.divider()
-            
-            # Missing skills & recommendations
-            if result['missing_skills']:
-                st.markdown("### 📈 Professional Growth & Interview Preparedness")
-                st.write("To bridge the gap to this role, the candidate should focus on the following development roadmap:")
-                
-                missing_html = '<div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">'
-                for s in result['missing_skills']:
-                    missing_html += f'<span style="background: #fff1f2; color: #e11d48; padding: 6px 16px; border-radius: 25px; font-size: 0.9rem; font-weight: 700; border: 1px solid #fecdd3;">Target: {s.title()}</span>'
-                missing_html += '</div>'
-                st.markdown(missing_html, unsafe_allow_html=True)
-                
-                if result.get('recommendations'):
-                    for rec in result['recommendations'][:4]:
-                        priority_icon = "🚀" if rec['priority'] == 'high' else "📚"
+                    if len(area) > 10: # Ensure it's a real sentence
                         st.markdown(f"""
-                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {'#e11d48' if rec['priority'] == 'high' else '#f59e0b'}; padding: 16px; border-radius: 12px; margin: 12px 0; box-shadow: var(--card-shadow);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <strong style="font-size: 1rem; color: #0f172a;">{priority_icon} Study Area: {rec['skill'].title()}</strong>
-                                <span style="background: #f1f5f9; color: #475569; padding: 2px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">{rec['time']} Commit</span>
-                            </div>
-                            <div style="font-size: 0.95rem; color: #334155; line-height: 1.5;">{rec['suggestion']}</div>
+                        <div style="background: #fff; border: 1px solid #e2e8f0; border-left: 5px solid #f43f5e; padding: 12px 16px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                            {area}
                         </div>
                         """, unsafe_allow_html=True)
 
-            # Career Advice & Role Suggestion
+            st.divider()
+
+            # 4. Verified Skills (Clean Native Layout)
+            st.markdown("### 🎯 Verified Technical Expertise")
+            valid_skills = [s.strip() for s in result.get('matched_skills', []) if len(s.strip()) > 1]
+            
+            if valid_skills:
+                # Use columns for skills to ensure perfect rendering without HTML leaks
+                skill_cols = st.columns(3)
+                for i, skill in enumerate(valid_skills):
+                    proficiency = result.get('skill_proficiency', {}).get(skill, 'Verified')
+                    with skill_cols[i % 3]:
+                        st.markdown(f"**✓ {skill.title()}** ({proficiency})")
+            else:
+                st.info("🔍 No specific technical skill matches identified.")
+
+            # 5. Missing Skills (Bulleted Roadmap with Explanations)
+            st.markdown("### 📈 Priority Development Areas")
+            
+            # Filter and sanitize
+            blacklist_categories = ['languages', 'skills', 'tools', 'technologies', 'experience', 'development', 'management']
+            valid_recommendations = [
+                rec for rec in result.get('recommendations', []) 
+                if len(rec.get('skill', '').strip()) > 1 
+                and rec.get('skill', '').lower() not in blacklist_categories
+            ]
+            
+            if valid_recommendations:
+                for rec in valid_recommendations[:6]: # Show top 6 priorities
+                    skill_name = rec.get('skill', 'Technology').upper()
+                    impact = rec.get('impact', 'Technical Debt')
+                    suggestion = rec.get('suggestion', 'Review documentation')
+                    
+                    st.markdown(f"""
+                    *   **{skill_name}**: {suggestion}
+                        *   *Impact*: {impact} | *Effort*: {rec.get('effort', 2)}/4
+                    """)
+            else:
+                st.success("✨ Critical JD skills appear to be well-aligned.")
+
+            # 6. Detailed Learning Roadmap
+            if result.get('recommendations'):
+                with st.expander("📚 View Detailed Professional Development Roadmap"):
+                    for rec in result['recommendations']:
+                        priority_icon = "🚀" if rec.get('effort', 2) > 3 else "📚"
+                        st.markdown(f"""
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {'#e11d48' if rec.get('effort', 2) > 3 else '#f59e0b'}; padding: 16px; border-radius: 12px; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong style="font-size: 1rem; color: #0f172a;">{priority_icon} {rec.get('skill', 'Technology').title()}</strong>
+                                <span style="background: #f1f5f9; color: #475569; padding: 2px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">{rec.get('time', '2 Weeks')} Effort</span>
+                            </div>
+                            <div style="font-size: 0.95rem; color: #334155; line-height: 1.5;">{rec.get('suggestion')}</div>
+                            <div style="margin-top: 8px; font-size: 0.8rem; color: #64748b; font-style: italic;">Impact: {rec.get('impact', 'Career Growth')}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+            # 7. Career Advice
             if result.get('career_advice'):
                 st.info(f"💡 **Strategic Career Guidance:** {result['career_advice']}")
             
@@ -1166,57 +1131,34 @@ if st.session_state.results:
         longlist = results_sorted[:longlist_count]
         shortlist = results_sorted[:shortlist_count]
     
-    # Longlist
+    # Longlist & Shortlist Display (Robust Native Version)
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown(f'<div style="font-weight: 700; font-size: 1.1rem; color: #6366f1; margin-bottom: 1rem;">📋 LONGLIST ({len(longlist)})</div>', unsafe_allow_html=True)
-        
-        longlist_rows = ""
-        for idx, r in enumerate(longlist, 1):
-            longlist_rows += f"""
-            <tr class="search-row">
-                <td class="search-cell" style="font-weight: 700; color: #2563eb;">#{idx}</td>
-                <td class="search-cell" style="color: #1e293b; font-weight: 600;">{r['filename']}</td>
-                <td class="search-cell" style="color: #10b981; font-weight: 700;">{r['final_score']}%</td>
-            </tr>
-            """
-            
         if longlist:
-            st.markdown(f"""
-            <table class="search-table">
-                <tbody>{longlist_rows}</tbody>
-            </table>
-            """, unsafe_allow_html=True)
-            st.success(f"✓ {len(longlist)} candidate(s) selected for longlist")
+            long_df = pd.DataFrame([{
+                'Rank': f"#{i+1}",
+                'Candidate': r['filename'],
+                'Score': f"{r['final_score']}%"
+            } for i, r in enumerate(longlist)])
+            st.dataframe(long_df, hide_index=True, use_container_width=True)
+            st.success(f"✓ {len(longlist)} selected")
         else:
-            st.warning("No candidates meet the longlist criteria")
-    
-    # Shortlist
+            st.warning("No longlisted candidates")
+            
     with col2:
         st.markdown(f'<div style="font-weight: 700; font-size: 1.1rem; color: #10b981; margin-bottom: 1rem;">🎯 SHORTLIST ({len(shortlist)})</div>', unsafe_allow_html=True)
-        
-        shortlist_rows = ""
-        for idx, r in enumerate(shortlist, 1):
-            shortlist_rows += f"""
-            <tr class="search-row">
-                <td class="search-cell" style="font-weight: 700; color: #10b981;">#{idx}</td>
-                <td class="search-cell" style="color: #1e293b; font-weight: 600;">{r['filename']}</td>
-                <td class="search-cell">
-                     <span class="score-badge badge-excellent">{r['confidence_level']}</span>
-                </td>
-            </tr>
-            """
-        
         if shortlist:
-            st.markdown(f"""
-            <table class="search-table">
-                <tbody>{shortlist_rows}</tbody>
-            </table>
-            """, unsafe_allow_html=True)
-            st.info(f"ℹ️ {len(shortlist)} candidate(s) selected for interviews")
+            short_df = pd.DataFrame([{
+                'Rank': f"#{i+1}",
+                'Candidate': r['filename'],
+                'Fit': r.get('confidence_level', 'Strong')
+            } for i, r in enumerate(shortlist)])
+            st.dataframe(short_df, hide_index=True, use_container_width=True)
+            st.info(f"ℹ️ {len(shortlist)} selected for interview")
         else:
-            st.warning("No candidates meet the shortlist criteria")
+            st.warning("No shortlisted candidates")
 
     
     # === RECOMMENDATIONS ===

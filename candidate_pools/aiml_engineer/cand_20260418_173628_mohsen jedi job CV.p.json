@@ -1,0 +1,33 @@
+{
+  "candidate_id": "cand_20260418_173628_mohsen jedi job CV.p",
+  "filename": "mohsen jedi job CV.pdf.pdf (1).pdf",
+  "email": "jeddimohsen2@gmail.com",
+  "final_score": 24.8,
+  "job_id": "job_20260418_173628",
+  "job_title": "AI/ML Engineer",
+  "cv_seniority": "junior",
+  "matched_skills": [],
+  "missing_skills": [
+    "machine learning",
+    "scala",
+    "develop"
+  ],
+  "confidence_level": "Very Low",
+  "category": "unassigned",
+  "added_date": "2026-04-18T17:36:28.278193",
+  "skill_proficiency": {},
+  "score_breakdown": {
+    "semantic_similarity": 1.4,
+    "skills_match": 0.0,
+    "experience_relevance": 90,
+    "keyword_density": 32.5,
+    "culture_fit": 48,
+    "seniority_alignment": 70
+  },
+  "strategic_summary": "**Low alignment** (24.8%). Technical match is only 0.0%. Mismatch found in both technical stack (machine learning, scala) and seniority requirements. Candidate may be better suited for a different career path or a fundamental training program.",
+  "improvement_areas": [
+    "**Technical Mastery Required:** \n- **Machine Learning**: Learn Scikit-Learn pipelines, Deep Learning with PyTorch or TensorFlow, and MLOps principles (model monitoring, versioning with DVC).\n- **Scala**: Study fundamentals of Scala.\n- **Develop**: Study fundamentals of Develop.",
+    "**Experience Gap:** The role requires unspecified level independent decision-making, while the resume indicates a junior profile. Focus on demonstrating leadership in past projects.",
+    "**Soft Skills & Values:** Missing indicators for collaborative workflows or specific values (e.g., 'Innovation', 'Mentorship') highlighted in the JD. Consider highlighting team-based achievements."
+  ]
+}
