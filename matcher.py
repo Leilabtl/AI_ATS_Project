@@ -7,8 +7,58 @@ import re
 class EnhancedMatcher:
     """Enhanced ATS matcher with explainability and bias detection."""
     
-    def __init__(self):
-        self.matcher = SemanticMatcher()
+    def __init__(self, matcher):
+        self.matcher = matcher
+        self.skill_intel = {
+            'python': {
+                'importance': 'Foundational for modern backend and data systems.',
+                'roadmap': 'Focus on Advanced Python (Decorators, Generators), AsyncIO for performance, and Packaging (Poetry/Pipenv). Study Django or FastAPI for rest services.'
+            },
+            'machine learning': {
+                'importance': 'Core for intelligent features and predictive analytics.',
+                'roadmap': 'Learn Scikit-Learn pipelines, Deep Learning with PyTorch or TensorFlow, and MLOps principles (model monitoring, versioning with DVC).'
+            },
+            'sql': {
+                'importance': 'Essential for data persistence and complex querying.',
+                'roadmap': 'Master Window Functions, Query Optimization (EXPLAIN ANALYZE), and Database Schema Design (Normalization vs Denormalization).'
+            },
+            'aws': {
+                'importance': 'Primary infrastructure for scalable deployments.',
+                'roadmap': 'Get certified as AWS Solutions Architect. Focus on Lambda (Serverless), S3, RDS, and IAM security policies.'
+            },
+            'docker': {
+                'importance': 'Standard for environment consistency and CI/CD.',
+                'roadmap': 'Learn Multi-stage builds, Docker Compose for local dev, and Container Security (scanning for vulnerabilities).'
+            },
+            'kubernetes': {
+                'importance': 'Orchestration for large-scale microservices.',
+                'roadmap': 'Study Pod lifecycle, Services, Ingress Controllers, and Helm Charts for deployment automation.'
+            },
+            'ci/cd': {
+                'importance': 'Enables fast and reliable software delivery.',
+                'roadmap': 'Learn to build pipelines in GitHub Actions or GitLab CI. Focus on automated testing, linting, and blue-green deployments.'
+            },
+            'javascript': {
+                'importance': 'Critical for building interactive user interfaces.',
+                'roadmap': 'Master ES6+ features, React (Hooks/Context), and State Management (Redux/Zustand).'
+            },
+            'c++': {
+                'importance': 'Required for high-performance systems and low-level optimization.',
+                'roadmap': 'Study Modern C++ (C++17/20), Memory Management (Smart Pointers), and STL containers optimization.'
+            },
+            'golang': {
+                'importance': 'Preferred for high-concurrency microservices.',
+                'roadmap': 'Learn Goroutines and Channels, Interface-based design, and standard library net/http for APIs.'
+            },
+            'rust': {
+                'importance': 'Ensures memory safety and performance.',
+                'roadmap': 'Master Ownership and Borrowing rules, Error handling (Result/Option), and the Cargo ecosystem.'
+            },
+            'data engineering': {
+                'importance': 'Vital for building reliable data pipelines.',
+                'roadmap': 'Study Apache Spark for big data, Airflow for orchestration, and Snowflake for cloud warehousing.'
+            }
+        }
         self.male_names = ['john', 'michael', 'david', 'james', 'robert', 'ali', 'ahmed', 'carlos', 'sergei', 'wei']
         self.female_names = ['sara', 'maria', 'emma', 'jessica', 'lisa', 'fatima', 'aisha', 'chen', 'priya', 'yuki']
     
@@ -74,35 +124,21 @@ class EnhancedMatcher:
         return bias_indicators
     
     def get_skill_gap_recommendations(self, missing_skills, matched_skills, analysis):
-        """Generate learning recommendations based on skill gaps."""
+        """Generate detailed, actionable learning roadmap for gaps."""
         recommendations = []
-        
-        skill_learning_paths = {
-            'docker': ('Learn containerization basics', 2, '2-3 weeks', 'high'),
-            'kubernetes': ('After Docker, learn orchestration', 3, '4 weeks', 'high'),
-            'aws': ('Cloud fundamentals course', 2, '3-4 weeks', 'high'),
-            'azure': ('Microsoft cloud platform', 2, '3-4 weeks', 'medium'),
-            'gcp': ('Google cloud platform', 2, '3-4 weeks', 'medium'),
-            'ci/cd': ('DevOps fundamentals', 2, '2-3 weeks', 'high'),
-            'machine learning': ('ML basics course', 4, '8-12 weeks', 'medium'),
-            'sql': ('Database fundamentals', 1, '2-3 weeks', 'high'),
-            'javascript': ('Frontend basics', 3, '4-6 weeks', 'medium'),
-            'api': ('API design course', 1, '2-3 weeks', 'medium'),
-            'testing': ('Test automation framework', 2, '3-4 weeks', 'medium'),
-            'git': ('Version control mastery', 1, '1-2 weeks', 'low'),
-        }
-        
-        for skill in missing_skills:
-            if skill in skill_learning_paths:
-                name, effort, time, priority = skill_learning_paths[skill]
-                recommendations.append({
-                    'skill': skill,
-                    'suggestion': name,
-                    'effort': effort,  # 1-4: Low to Very High
-                    'time': time,
-                    'priority': priority,
-                    'impact': 'high' if skill in matched_skills else 'medium'
-                })
+        for skill in list(missing_skills.keys())[:5]:
+            # Pull from our new skill_intel mapping for depth
+            intel = self.skill_intel.get(skill.lower(), {
+                'importance': f'Key technical requirement for effective performance in this role.',
+                'roadmap': f'Acquire foundational knowledge and build a practical portfolio project involving {skill.title()}.'
+            })
+            
+            recommendations.append({
+                'skill': skill,
+                'priority': 'high' if skill in ['python', 'sql', 'machine learning', 'aws', 'docker'] else 'medium',
+                'suggestion': f"{intel['importance']} {intel['roadmap']}",
+                'time': '2-4 weeks' if len(skill) > 5 else '1 week'
+            })
         
         return sorted(recommendations, key=lambda x: x['priority'] == 'high', reverse=True)
     
@@ -242,16 +278,21 @@ class EnhancedMatcher:
         areas = []
         if analysis['missing_skills']:
             skills = list(analysis['missing_skills'].keys())[:3]
-            areas.append(f"**Technical Mastery:** Need to acquire hands-on experience with {', '.join(skills)}. The JD specifically prioritizes these for core delivery.")
+            mastery_text = "**Technical Mastery Required:** "
+            for s in skills:
+                intel = self.skill_intel.get(s.lower(), {})
+                roadmap = intel.get('roadmap', f"Study fundamentals of {s.title()}.")
+                mastery_text += f"\n- **{s.title()}**: {roadmap}"
+            areas.append(mastery_text)
         
         if analysis['seniority_alignment'] < 80:
-            areas.append(f"**Experience Gap:** The role requires {analysis['job_seniority']} level independent decision-making, while the resume indicates a {analysis['cv_seniority']} profile.")
+            areas.append(f"**Experience Gap:** The role requires {analysis['job_seniority']} level independent decision-making, while the resume indicates a {analysis['cv_seniority']} profile. Focus on demonstrating leadership in past projects.")
             
         if analysis['culture_fit'] < 60:
-            areas.append("**Soft Skills & Values:** Missing indicators for collaborative workflows or specific values (e.g., 'Innovation', 'Mentorship') highlighted in the JD.")
+            areas.append("**Soft Skills & Values:** Missing indicators for collaborative workflows or specific values (e.g., 'Innovation', 'Mentorship') highlighted in the JD. Consider highlighting team-based achievements.")
             
         if analysis['experience_relevance'] < 60:
-            areas.append("**Domain Knowledge:** Professional history lacks depth in this specific industry sector compared to standard benchmarks.")
+            areas.append("**Domain Knowledge:** Professional history lacks depth in this specific industry sector compared to standard benchmarks. Consider adding certifications or projects related to this domain.")
             
         return areas
 
@@ -267,5 +308,6 @@ class EnhancedMatcher:
 
 def match_cv_to_job(cv_path, job_description):
     """Legacy function for compatibility."""
-    enhanced = EnhancedMatcher()
+    from embedding import SemanticMatcher
+    enhanced = EnhancedMatcher(SemanticMatcher())
     return enhanced.match_cv_to_job(cv_path, job_description)

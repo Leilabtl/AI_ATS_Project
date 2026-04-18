@@ -315,7 +315,8 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-matcher = EnhancedMatcher()
+from embedding import SemanticMatcher
+matcher = EnhancedMatcher(SemanticMatcher())
 
 # ── Sidebar Navigation ───────────────────────────────────────────────────────
 with st.sidebar:
@@ -996,6 +997,31 @@ if st.session_state.results:
             ), unsafe_allow_html=True)
             
             st.caption("Formula: 35% Semantic + 25% Skills + 15% Experience + 15% Keywords + 5% Culture + 5% Seniority")
+            
+            st.divider()
+            
+            # Strategic Summary Card
+            if result.get('strategic_summary'):
+                st.markdown(f"""
+                <div style="background: #eef2ff; border: 1px solid #c7d2fe; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                    <h3 style="margin-top: 0; color: #312e81; display: flex; align-items: center; gap: 8px;">
+                        <span>📋</span> Match Rationale & Executive Summary
+                    </h3>
+                    <div style="color: #3730a3; font-size: 1.05rem; line-height: 1.6;">
+                        {result['strategic_summary']}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Critical Improvement Areas (Detailed)
+            if result.get('improvement_areas'):
+                st.markdown("### 🛠️ Strategic Gap Analysis & Learning Roadmap")
+                for area in result['improvement_areas']:
+                    st.markdown(f"""
+                    <div style="background: #fff; border: 1px solid #e2e8f0; border-left: 5px solid #6366f1; padding: 15px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                        {area}
+                    </div>
+                    """, unsafe_allow_html=True)
             
             st.divider()
             

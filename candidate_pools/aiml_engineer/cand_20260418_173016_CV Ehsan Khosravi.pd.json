@@ -1,0 +1,36 @@
+{
+  "candidate_id": "cand_20260418_173016_CV Ehsan Khosravi.pd",
+  "filename": "CV Ehsan Khosravi.pdf",
+  "email": "ehsan.khosravi.8409@gmail.com",
+  "final_score": 34.3,
+  "job_id": "job_20260418_173016",
+  "job_title": "AI/ML Engineer",
+  "cv_seniority": "junior",
+  "matched_skills": [
+    "machine learning"
+  ],
+  "missing_skills": [
+    "languages",
+    "develop"
+  ],
+  "confidence_level": "Very Low",
+  "category": "unassigned",
+  "added_date": "2026-04-18T17:30:16.827234",
+  "skill_proficiency": {
+    "machine learning": "Junior"
+  },
+  "score_breakdown": {
+    "semantic_similarity": 2.2,
+    "skills_match": 33.3,
+    "experience_relevance": 90,
+    "keyword_density": 42.4,
+    "culture_fit": 36,
+    "seniority_alignment": 70
+  },
+  "strategic_summary": "**Low alignment** (34.3%). Technical match is only 33.3%. Mismatch found in both technical stack (languages, develop) and seniority requirements. Candidate may be better suited for a different career path or a fundamental training program.",
+  "improvement_areas": [
+    "**Technical Mastery:** Need to acquire hands-on experience with languages, develop. The JD specifically prioritizes these for core delivery.",
+    "**Experience Gap:** The role requires unspecified level independent decision-making, while the resume indicates a junior profile.",
+    "**Soft Skills & Values:** Missing indicators for collaborative workflows or specific values (e.g., 'Innovation', 'Mentorship') highlighted in the JD."
+  ]
+}
