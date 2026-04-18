@@ -785,6 +785,10 @@ if process_button and job_title and job_description and uploaded_files:
         </div>
     </div>
     """, unsafe_allow_html=True)
+    
+    # SAVE RESULTS TO SESSION STATE
+    st.session_state.results = results
+    st.rerun()
 
 
 # ── Results Processing & Rendering (New) ──────────────────────────────────────
