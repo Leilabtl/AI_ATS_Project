@@ -53,6 +53,7 @@ st.set_page_config(
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
 :root {
     --primary: #2563eb;
@@ -72,8 +73,13 @@ st.markdown("""
 
 #MainMenu, footer, header {visibility: hidden;}
 
-* {
-    font-family: 'Inter', sans-serif !important;
+/* Ensure Inter is the default but don't break Material Icons */
+html, body, [class*="st-"] {
+    font-family: 'Inter', sans-serif;
+}
+
+.material-icons {
+    font-family: 'Material Icons' !important;
 }
 
 /* Sidebar Styling */
@@ -839,8 +845,7 @@ if st.session_state.results:
         score = r['final_score']
         badge_class = "badge-excellent" if score >= 85 else "badge-good" if score >= 70 else "badge-mid" if score >= 40 else "badge-low"
         
-        rows_html += f"""
-        <tr class="search-row">
+        rows_html += f"""<tr class="search-row">
             <td class="search-cell" style="font-weight: 700; color: #1e293b;">#{idx}</td>
             <td class="search-cell">
                 <div style="font-weight: 600; color: #1e293b;">{r['filename']}</div>
@@ -853,8 +858,7 @@ if st.session_state.results:
             <td class="search-cell" style="text-align: right;">
                 <span style="color: #0891b2; font-size: 0.8rem; font-weight: 600;">AI EVALUATED</span>
             </td>
-        </tr>
-        """
+        </tr>"""
 
     st.markdown(f"""
     <table class="search-table">
@@ -876,7 +880,7 @@ if st.session_state.results:
     st.divider()
     
     # === DETAILED ANALYSIS ===
-    st.markdown('<div style="font-weight: 700; font-size: 1.25rem; color: white; margin: 2rem 0 1rem 0;">📊 Detailed Candidate Analysis</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); margin: 2rem 0 1rem 0;">📊 Detailed Candidate Analysis</div>', unsafe_allow_html=True)
     
     for idx, result in enumerate(results_sorted, 1):
         with st.expander(f"#{idx} - {result['filename']} ({result['confidence_level']}) 👤", expanded=(idx == 1)):
