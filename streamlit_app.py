@@ -58,248 +58,230 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ── Global CSS ──────────────────────────────────────────────────────────
+# ── Global CSS (Helix design system) ────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-    --primary: #2563eb;
-    --primary-light: #eff6ff;
-    --sidebar-bg: #f8fafc;
-    --border: #e2e8f0;
-    --text-main: #020617;
-    --text-muted: #334155;
-    --bg-app: #ffffff;
-    --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --bg:          #F8F9FA;
+    --surface:     #FFFFFF;
+    --ink:         #0F1115;
+    --ink-2:       #4B5563;
+    --ink-3:       #9CA3AF;
+    --divider:     #EEF0F3;
+    --hover:       #F3F4F6;
+    --accent:      #4F46E5;
+    --accent-soft: #EEF0FE;
+    --track:       #ECEEF1;
+    --shadow:      0 2px 8px rgba(0,0,0,0.06);
 }
 
-/* Base Styles */
-.stApp {
-    background-color: var(--bg-app) !important;
-    color: var(--text-main) !important;
+/* ── Base ── */
+html, body, .stApp {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif !important;
+    font-feature-settings: "cv11","ss01";
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.005em;
+    background: var(--bg) !important;
+    color: var(--ink) !important;
 }
+#MainMenu, footer, header { visibility: hidden; }
 
-#MainMenu, footer, header {visibility: hidden;}
-
-/* Professional Typography - targeted to text blocks only to not break icons */
-html, body, .stApp, .metric-card, .search-table, .nav-item, .sidebar-header, .premium-header, .sidebar-info {
-    font-family: 'Inter', sans-serif;
-}
-
-/* Explicitly restore icons if they were caught in the override */
-.material-icons, [class*="material-icons"], [data-testid="stExpander"] span {
-    font-family: 'Material Icons', sans-serif !important;
-}
-
-/* Sidebar Styling */
+/* ── Sidebar ── */
 [data-testid="stSidebar"] {
-    background-color: var(--sidebar-bg) !important;
-    border-right: 1px solid var(--border) !important;
+    background: var(--surface) !important;
+    border-right: 1px solid var(--divider) !important;
 }
-
-.sidebar-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 24px 16px;
-    margin-bottom: 24px;
-}
-
 .nav-label {
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0 16px;
-    margin: 24px 0 8px 0;
+    font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-3); padding: 0 12px; margin: 24px 0 8px; font-weight: 500;
 }
-
-/* Sidebar Item (Custom) */
 .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 16px;
-    border-radius: 8px;
-    color: var(--text-main);
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    margin: 2px 12px;
-    transition: all 0.2s;
+    display: flex; align-items: center; gap: 12px;
+    padding: 9px 12px; border-radius: 8px;
+    font-size: 14px; color: var(--ink-2); font-weight: 500;
+    margin: 1px 0; transition: background .12s;
 }
+.nav-item.active { background: var(--accent-soft); color: var(--accent); }
+.nav-item:hover:not(.active) { background: var(--hover); color: var(--ink); }
 
-.nav-item.active {
-    background-color: var(--primary-light);
-    color: var(--primary);
-}
-
-.nav-item:hover:not(.active) {
-    background-color: #f1f5f9;
-}
-
-/* Metrics Dashboard */
-.metric-row {
-    display: flex;
-    gap: 24px;
-    margin: 24px 0;
-}
-
-.metric-card {
-    background: #ffffff;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-    flex: 1;
-    min-width: 200px;
-}
-
-.metric-val {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--text-main);
-    line-height: 1;
-}
-
-.metric-lab {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-    margin: 8px 0;
-}
-
-.metric-trend {
-    font-size: 0.875rem;
-    font-weight: 600;
-}
-
-/* Tab Styling - Modern SaaS Underline */
+/* ── Tabs ── */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 32px;
-    border-bottom: 1px solid var(--border);
-    background: transparent;
+    gap: 32px; border-bottom: 1px solid var(--divider); background: transparent;
 }
-
 .stTabs [data-baseweb="tab"] {
-    height: 48px;
-    background: transparent;
-    border: none;
-    color: var(--text-muted) !important;
-    font-weight: 500 !important;
-    padding: 0 4px;
+    height: 48px; background: transparent; border: none;
+    color: var(--ink-3) !important; font-weight: 500 !important; padding: 0 4px;
+    font-size: 14px !important;
 }
-
 .stTabs [aria-selected="true"] {
-    color: var(--primary) !important;
-    border-bottom: 2px solid var(--primary) !important;
+    color: var(--accent) !important;
+    border-bottom: 2px solid var(--accent) !important;
 }
 
-/* Modern Card */
-.content-card {
-    background: #ffffff;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 32px;
-    margin: 24px 0;
+/* ── Metric cards ── */
+.metric-card {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    flex: 1; min-width: 180px;
+}
+.metric-val {
+    font-size: 2.25rem; font-weight: 600; color: var(--ink);
+    line-height: 1; letter-spacing: -0.03em;
+}
+.metric-lab {
+    font-size: 13px; color: var(--ink-3); margin-top: 8px; font-weight: 400;
 }
 
-/* Score Badges Tooltip Style */
-.badge {
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
+/* ── Candidate list ── */
+.cand-list {
+    background: var(--surface); border-radius: 14px;
+    box-shadow: var(--shadow); overflow: hidden; margin-top: 8px;
+}
+.cand-row {
+    display: grid; grid-template-columns: 44px 1fr 56px;
+    gap: 16px; align-items: center; padding: 18px 24px;
+    border-bottom: 1px solid var(--divider); transition: background .12s;
+}
+.cand-row:last-child { border-bottom: none; }
+.cand-row:hover { background: #FBFBFC; }
+.cand-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #F1F2F4; color: var(--ink-2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; letter-spacing: -0.01em;
+    flex-shrink: 0;
+}
+.cand-name { font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
+.cand-meta { font-size: 13px; color: var(--ink-2); margin-top: 3px; font-weight: 400; }
+.score-circle {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 600; letter-spacing: -0.02em;
+    flex-shrink: 0;
+}
+.score-circle.mid { opacity: .78; }
+.score-circle.low { opacity: .55; }
+
+/* ── Detail panel ── */
+.detail-card {
+    background: var(--surface); border-radius: 14px;
+    box-shadow: var(--shadow); padding: 0; overflow: hidden;
+    margin-top: 16px;
+}
+.detail-head {
+    display: flex; align-items: center; gap: 16px; padding: 28px 28px 20px;
+    border-bottom: 1px solid var(--divider);
+}
+.detail-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 600; flex-shrink: 0;
+}
+.detail-name { font-size: 18px; font-weight: 600; color: var(--ink); letter-spacing: -0.02em; }
+.detail-meta { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
+
+/* ── Score gauge ── */
+.gauge-wrap {
+    display: flex; flex-direction: column; align-items: center; padding: 28px 0 20px;
+}
+.gauge-label { margin-top: 14px; font-size: 14px; font-weight: 500; color: var(--accent); }
+.gauge-sub   { margin-top: 6px; font-size: 13px; color: var(--ink-3); text-align: center; }
+
+/* ── Score breakdown bars ── */
+.section-eyebrow {
+    font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 600; margin-bottom: 16px;
+}
+.bd-row {
+    display: grid; grid-template-columns: 120px 1fr 36px;
+    gap: 14px; align-items: center; margin-bottom: 12px;
+}
+.bd-label { font-size: 13px; color: var(--ink-2); font-weight: 500; }
+.bd-track {
+    height: 6px; background: var(--track); border-radius: 3px; overflow: hidden;
+}
+.bd-fill  { height: 100%; background: var(--accent); border-radius: 3px; }
+.bd-value { font-size: 13px; color: var(--ink); font-weight: 600; text-align: right; }
+
+/* ── Skill fit two-column ── */
+.skill-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 8px; }
+.skill-col-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+.skill-col-title.meets { color: var(--accent); }
+.skill-col-title.gap   { color: var(--ink-3); }
+.skill-item { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 8px; line-height: 1.3; }
+.skill-item.gap-item   { color: var(--ink-2); }
+.skill-sub  { font-size: 12px; color: var(--ink-3); font-weight: 400; display: block; margin-top: 2px; }
+
+/* ── Rec badge ── */
+.rec-badge {
+    display: inline-block; padding: 3px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 700; letter-spacing: -0.005em;
+}
+.rec-shortlist { background: var(--accent-soft); color: var(--accent); }
+.rec-consider  { background: #FEF9C3; color: #854D0E; }
+.rec-decline   { background: #FEE2E2; color: #991B1B; }
+
+/* ── GPT insight card ── */
+.gpt-card {
+    background: var(--surface); border-radius: 14px;
+    box-shadow: var(--shadow); padding: 24px; margin-bottom: 16px;
+    border-left: 4px solid var(--accent);
+}
+.gpt-card-title {
+    font-size: 13px; font-weight: 600; color: var(--accent);
+    letter-spacing: -0.005em; margin-bottom: 10px;
 }
 
-.badge-blue { background: #dbeafe; color: #1e40af; }
-.badge-green { background: #dcfce7; color: #166534; }
+/* ── Gap item card ── */
+.gap-card {
+    background: var(--bg); border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 10px;
+}
+.gap-card-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+.gap-card-meta  { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.gap-card-path  { font-size: 13px; color: var(--ink-2); margin-top: 8px; line-height: 1.5; }
 
-/* Table Overhaul */
-.search-table {
-    width: 100%;
-    border-collapse: collapse;
+/* ── Action buttons ── */
+.btn-primary {
+    background: var(--accent); color: #fff; border: none;
+    border-radius: 10px; padding: 10px 20px; font-size: 14px;
+    font-weight: 500; cursor: pointer; box-shadow: var(--shadow);
+}
+.btn-ghost {
+    background: var(--surface); color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--divider);
+    border: none; border-radius: 10px; padding: 10px 20px;
+    font-size: 14px; font-weight: 500; cursor: pointer;
 }
 
-.search-table th {
-    text-align: left;
-    padding: 12px 16px;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    font-weight: 600;
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
-}
-
-.search-row td {
-    padding: 20px 16px;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.search-row:hover { background: #f8fafc; }
-
-/* Inputs styling */
+/* ── Inputs ── */
 .stTextArea textarea, .stTextInput input {
-    background: #ffffff !important;
-    border: 1px solid var(--border) !important;
-    color: var(--text-main) !important;
-    border-radius: 8px !important;
+    background: var(--surface) !important;
+    border: 1px solid var(--divider) !important;
+    color: var(--ink) !important; border-radius: 10px !important;
+    font-family: 'Inter', sans-serif !important;
 }
 
-/* Sidebar Info Box */
-.sidebar-info {
-    background: var(--primary-light);
-    border-radius: 12px;
-    padding: 16px;
-    margin: 16px;
-    color: #1e40af;
-    font-size: 0.85rem;
+/* ── Info / status boxes ── */
+.status-active {
+    background: var(--accent-soft); border-radius: 10px;
+    padding: 10px 14px; color: var(--accent); font-weight: 600;
+    font-size: 13px; margin-top: 4px;
 }
-
+.status-inactive {
+    background: #FEF9C3; border-radius: 10px;
+    padding: 10px 14px; color: #854D0E; font-weight: 600;
+    font-size: 13px; margin-top: 4px;
+}
 .premium-header {
-    font-family: 'Inter', sans-serif;
-    font-weight: 700;
-    font-size: 1.25rem;
-    color: var(--text-main);
-    margin: 2.5rem 0 1.25rem 0;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-/* Strategic Analysis Card */
-.strategic-card {
-    background: #fdfdfd;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    border-left: 5px solid var(--primary);
-}
-
-.strategic-summary {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-main);
-    margin-bottom: 1rem;
-}
-
-.improvement-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 12px 0;
-    font-size: 0.95rem;
-    color: #1e293b;
-    background: #f8fafc;
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-}
-
-.improvement-item span {
-    font-size: 1.2rem;
+    font-weight: 600; font-size: 20px; color: var(--ink);
+    margin: 32px 0 16px; letter-spacing: -0.02em;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -313,16 +295,17 @@ if 'results' not in st.session_state:
 if 'llm_analyzer' not in st.session_state:
     st.session_state.llm_analyzer = get_analyzer_from_env()  # None if key not set
 
-# ── Top bar (Custom SaaS Layout) ─────────────────────────────────────────────
+# ── Top bar ──────────────────────────────────────────────────────────────────
 st.markdown(f"""
-<div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; border-bottom: 1px solid #e2e8f0; margin-bottom: 32px; background: white; margin-top: -6rem; margin-left: -5rem; margin-right: -5rem;">
-    <div style="font-size: 0.875rem; color: #64748b; font-weight: 500;">
-        Recruitment / <span style="color: #1e293b; font-weight: 700;">{st.session_state.get('current_job_title', 'New Job')}</span>
+<div style="display:flex;justify-content:space-between;align-items:center;
+            padding:14px 0 14px;border-bottom:1px solid #EEF0F3;margin-bottom:28px;">
+    <div style="font-size:13px;color:#9CA3AF;font-weight:500;">
+        Open roles &nbsp;/&nbsp;
+        <span style="color:#0F1115;font-weight:600;">{st.session_state.get('current_job_title', 'New Role')}</span>
     </div>
-    <div style="display: flex; gap: 16px; align-items: center;">
-        <span class="badge" style="background: #eff6ff; color: #2563eb; font-weight: 600;">v2.0</span>
-        <button style="background: white; border: 1px solid #e2e8f0; padding: 6px 16px; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">Export</button>
-        <button style="background: white; border: 1px solid #e2e8f0; padding: 6px 16px; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">+ New Job</button>
+    <div style="display:flex;gap:10px;align-items:center;">
+        <span style="background:#EEF0FE;color:#4F46E5;font-size:11px;font-weight:600;
+                     padding:3px 10px;border-radius:6px;letter-spacing:.03em;">v2.5</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -333,41 +316,32 @@ matcher = EnhancedMatcher(SemanticMatcher())
 # ── Sidebar Navigation ───────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("""
-    <div class="sidebar-header">
-        <div style="width: 32px; height: 32px; background: #2563eb; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800;">🧭</div>
-        <div>
-            <div style="font-weight: 700; color: #1e293b; font-size: 1.1rem; line-height: 1;">HR Compass</div>
-            <div style="font-size: 0.7rem; color: #64748b; font-weight: 500;">AI Talent Navigation</div>
-        </div>
+    <div style="padding: 28px 8px 0;">
+        <div style="font-size:17px;font-weight:600;color:#0F1115;letter-spacing:-0.02em;line-height:1;">HR Compass</div>
+        <div style="font-size:12px;color:#9CA3AF;font-weight:400;margin-top:3px;">Talent intelligence</div>
     </div>
     """, unsafe_allow_html=True)
-    
-    st.markdown('<div class="nav-label">WORKSPACE</div>', unsafe_allow_html=True)
-    st.markdown('<div class="nav-item active">🟦 Job Setup</div>', unsafe_allow_html=True)
-    st.markdown('<div class="nav-item">📁 Candidate Pool</div>', unsafe_allow_html=True)
-    st.markdown('<div class="nav-item">📊 Analytics</div>', unsafe_allow_html=True)
-    st.markdown('<div class="nav-item">📄 Reports</div>', unsafe_allow_html=True)
-    
-    st.markdown('<div class="nav-label">SETTINGS</div>', unsafe_allow_html=True)
-    st.markdown('<div class="nav-item">⚙️ Preferences</div>', unsafe_allow_html=True)
-    st.markdown('<div class="nav-item">👥 Team</div>', unsafe_allow_html=True)
-    
-    st.markdown("""
-    <div class="sidebar-info">
-        <div style="font-weight: 700; margin-bottom: 4px;">Quick start</div>
-        Enter job details, upload CVs, then click Analyze to begin AI screening.
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("""
-    <div style="display: flex; gap: 8px; margin: 16px;">
-        <div style="background: #f1f5f9; padding: 12px; border-radius: 8px; flex: 1; text-align: center;">
-            <div style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">0</div>
-            <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">CVs loaded</div>
-        </div>
-        <div style="background: #f1f5f9; padding: 12px; border-radius: 8px; flex: 1; text-align: center;">
-            <div style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">—</div>
-            <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Last run</div>
+
+    st.markdown('<div style="margin-top:28px;"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="nav-label">Workspace</div>', unsafe_allow_html=True)
+    st.markdown('<div class="nav-item active">Job Setup</div>', unsafe_allow_html=True)
+    st.markdown('<div class="nav-item">Candidate Pool</div>', unsafe_allow_html=True)
+    st.markdown('<div class="nav-item">Analytics</div>', unsafe_allow_html=True)
+    st.markdown('<div class="nav-item">Reports</div>', unsafe_allow_html=True)
+
+    st.markdown('<div class="nav-label">Intelligence</div>', unsafe_allow_html=True)
+    st.markdown('<div class="nav-item">Scoring models</div>', unsafe_allow_html=True)
+    st.markdown('<div class="nav-item">Settings</div>', unsafe_allow_html=True)
+
+    n_cvs = len(st.session_state.results) if st.session_state.get('results') else 0
+    job_name = st.session_state.get('current_job_title', '—')
+    st.markdown(f"""
+    <div style="margin-top:auto;padding:20px 8px 8px;">
+        <div style="background:#F8F9FA;border-radius:10px;padding:14px 16px;">
+            <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+                        color:#9CA3AF;font-weight:600;margin-bottom:10px;">Current job</div>
+            <div style="font-size:13px;font-weight:500;color:#0F1115;">{job_name}</div>
+            <div style="font-size:12px;color:#9CA3AF;margin-top:4px;">{n_cvs} candidate{'s' if n_cvs != 1 else ''} processed</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1044,48 +1018,30 @@ if st.session_state.results:
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Ranking Table ──────────────────────────────────────────────────────────
+    # ── Candidate list (Helix card rows) ──────────────────────────────────────
+    list_meta = f"Showing <b style='color:#0F1115'>{len(results_sorted)}</b> of <b style='color:#0F1115'>{len(results)}</b> candidates"
+    st.markdown(f'<div style="font-size:13px;color:#9CA3AF;font-weight:500;padding:4px 0 12px;">{list_meta}</div>', unsafe_allow_html=True)
+
     rows_html = ""
     for idx, r in enumerate(results_sorted, 1):
         score = r['final_score']
-        badge_class = "badge-excellent" if score >= 85 else "badge-good" if score >= 70 else "badge-mid" if score >= 40 else "badge-low"
-        
-        # Clean up filename for display
-        display_name = r['filename'].replace('.pdf', '').replace('.txt', '').replace('.docx', '')
-        
-        rows_html += f"""<tr class="search-row">
-            <td class="search-cell" style="font-weight: 700; color: #020617;">#{idx}</td>
-            <td class="search-cell">
-                <div style="font-weight: 700; color: #020617; font-size: 0.95rem;">{display_name}</div>
-                <div style="font-size: 0.75rem; color: #475569; margin-top: 2px;">{r['cv_seniority'].title()} Level</div>
-            </td>
-            <td class="search-cell">
-                <span class="score-badge {badge_class}">{score}% Match</span>
-            </td>
-            <td class="search-cell" style="color: #64748b;">{len(r['matched_skills'])} matched</td>
-            <td class="search-cell" style="text-align: right;">
-                <span style="color: #0891b2; font-size: 0.8rem; font-weight: 600;">AI EVALUATED</span>
-            </td>
-        </tr>"""
+        opacity_class = "" if score >= 80 else " mid" if score >= 60 else " low"
+        display_name = r['filename'].replace('.pdf','').replace('.txt','').replace('.docx','')
+        initials = "".join(w[0].upper() for w in display_name.split()[:2]) or display_name[:2].upper()
+        seniority = r['cv_seniority'].title()
+        matched = len(r['matched_skills'])
+        has_gpt = "· GPT" if r.get('llm_analysis') else ""
+        rows_html += f"""
+        <div class="cand-row">
+            <div class="cand-avatar">{initials}</div>
+            <div>
+                <div class="cand-name">#{idx} {display_name}</div>
+                <div class="cand-meta">{seniority} · {matched} skills matched{has_gpt}</div>
+            </div>
+            <div class="score-circle{opacity_class}">{score:.0f}</div>
+        </div>"""
 
-    st.markdown(f"""
-    <div style="overflow-x: auto;">
-        <table class="search-table">
-            <thead>
-                <tr>
-                    <th>RANK</th>
-                    <th>CANDIDATE</th>
-                    <th>AI SCORE</th>
-                    <th>SKILLS</th>
-                    <th style="text-align: right;">STATUS</th>
-                </tr>
-            </thead>
-            <tbody>
-                {rows_html}
-            </tbody>
-        </table>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f'<div class="cand-list">{rows_html}</div>', unsafe_allow_html=True)
     
     st.divider()
     
@@ -1098,77 +1054,81 @@ if st.session_state.results:
             # 1. Executive Summary — LLM version takes priority, keyword fallback otherwise
             llm = result.get('llm_analysis')
             if llm and llm.get('executive_summary'):
-                # ── Claude-generated executive summary ──
                 rec = llm.get('interview_recommendation', 'Consider')
-                rec_color = '#166534' if rec == 'Shortlist' else '#92400e' if rec == 'Consider' else '#991b1b'
-                rec_bg = '#f0fdf4' if rec == 'Shortlist' else '#fefce8' if rec == 'Consider' else '#fef2f2'
+                rec_cls = 'rec-shortlist' if rec == 'Shortlist' else 'rec-consider' if rec == 'Consider' else 'rec-decline'
                 strengths_html = "".join(
-                    f'<li style="margin:4px 0;">{s}</li>'
+                    f'<div style="font-size:13px;color:#4B5563;margin-bottom:4px;">· {s}</div>'
                     for s in llm.get('key_strengths', [])
                 )
                 st.markdown(f"""
-                <div style="background:#f8faff;border:1px solid #c7d7fe;border-left:5px solid #4f46e5;
-                            padding:20px;border-radius:12px;margin-bottom:20px;">
+                <div class="gpt-card">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                        <h3 style="margin:0;color:#1e1b4b;font-size:1.15rem;">
-                            🤖 GPT — Executive Summary
-                        </h3>
-                        <span style="background:{rec_bg};color:{rec_color};font-weight:700;
-                                     padding:4px 12px;border-radius:20px;font-size:0.8rem;">
-                            {rec}
-                        </span>
+                        <div class="gpt-card-title">GPT Executive Summary</div>
+                        <span class="rec-badge {rec_cls}">{rec}</span>
                     </div>
-                    <p style="color:#3730a3;font-size:1rem;line-height:1.65;margin:0 0 12px 0;">
+                    <div style="font-size:14px;color:#4B5563;line-height:1.65;margin-bottom:14px;">
                         {llm['executive_summary']}
-                    </p>
-                    <div style="font-size:0.85rem;font-weight:700;color:#4338ca;margin-bottom:4px;">
-                        Key Strengths
                     </div>
-                    <ul style="margin:0;padding-left:18px;color:#374151;font-size:0.9rem;">
-                        {strengths_html}
-                    </ul>
+                    <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+                                color:#9CA3AF;font-weight:600;margin-bottom:8px;">Key strengths</div>
+                    {strengths_html}
                 </div>
                 """, unsafe_allow_html=True)
             elif result.get('strategic_summary'):
-                # ── Keyword-based fallback summary ──
                 st.markdown(f"""
-                <div style="background: #fdfcfe; border: 1px solid #e1e7ff; border-left: 5px solid #6366f1; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-                    <h3 style="margin-top: 0; color: #1e1b4b; display: flex; align-items: center; gap: 8px; font-size: 1.25rem;">
-                        <span>📊</span> Match Rationale & Executive Summary
-                    </h3>
-                    <div style="color: #3730a3; font-size: 1.05rem; line-height: 1.6;">
+                <div class="gpt-card">
+                    <div class="gpt-card-title">Match Summary</div>
+                    <div style="font-size:14px;color:#4B5563;line-height:1.65;">
                         {result['strategic_summary']}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
 
-            # 2. Performance Metrics
+            # 2. Score gauge + breakdown
             final_score = result['final_score']
-            badge_class = "badge-excellent" if final_score >= 85 else "badge-good" if final_score >= 70 else "badge-mid" if final_score >= 40 else "badge-low"
-            
+            r_val = 60
+            circumference = 2 * 3.14159 * r_val
+            offset = circumference * (1 - final_score / 100)
+            fit_label = "Strong fit" if final_score >= 80 else "Good fit" if final_score >= 65 else "Partial fit" if final_score >= 50 else "Low fit"
+            confidence = result.get('confidence_level', '')
+
             col_a, col_b = st.columns([1, 2])
             with col_a:
                 st.markdown(f"""
-                <div style="text-align: center; padding: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
-                    <div style="font-size: 2rem; font-weight: 800; color: #0f172a;">{final_score}%</div>
-                    <div style="font-size: 0.8rem; text-transform: uppercase; color: #64748b; font-weight: 700; margin-top: 4px;">Match Score</div>
-                    <div class="score-badge {badge_class}" style="margin-top: 10px; display: inline-block;">{result.get('confidence_level', 'Evaluated')}</div>
+                <div class="gauge-wrap">
+                    <svg width="140" height="140" viewBox="0 0 140 140">
+                        <circle cx="70" cy="70" r="{r_val}" fill="none" stroke="#ECEEF1" stroke-width="8"/>
+                        <circle cx="70" cy="70" r="{r_val}" fill="none" stroke="#4F46E5" stroke-width="8"
+                                stroke-dasharray="{circumference:.1f}" stroke-dashoffset="{offset:.1f}"
+                                stroke-linecap="round" transform="rotate(-90 70 70)"/>
+                    </svg>
+                    <div style="margin-top:-84px;margin-bottom:70px;font-size:38px;font-weight:600;
+                                color:#0F1115;letter-spacing:-0.03em;text-align:center;line-height:1;">
+                        {final_score:.0f}
+                    </div>
+                    <div class="gauge-label">{fit_label}</div>
+                    <div class="gauge-sub">{confidence} confidence</div>
                 </div>
                 """, unsafe_allow_html=True)
-            
+
             with col_b:
-                st.markdown("**📈 Scoring Breakdown**")
                 scores = result.get('score_breakdown', {})
-                breakdown_html = '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">'
-                for lab, val in [("Semantic", scores.get('semantic_similarity', 0)), 
-                                ("Skills", scores.get('skills_match', 0)), 
-                                ("Exp.", scores.get('experience_relevance', 0)),
-                                ("Keywords", scores.get('keyword_density', 0)),
-                                ("Culture", scores.get('culture_fit', 0)),
-                                ("Seniority", scores.get('seniority_alignment', 0))]:
-                    breakdown_html += f'<div style="background: #fff; padding: 6px; border: 1px solid #f1f5f9; border-radius: 6px; text-align: center;"><div style="font-size: 0.65rem; color: #64748b; font-weight: 700;">{lab}</div><div style="font-size: 0.9rem; font-weight: 700; color: #334155;">{val:.0f}%</div></div>'
-                breakdown_html += "</div>"
-                st.markdown(breakdown_html, unsafe_allow_html=True)
+                bars_html = '<div class="section-eyebrow">Score breakdown</div>'
+                for lab, val in [
+                    ("Keyword match", scores.get('semantic_similarity', 0)),
+                    ("Skills match",  scores.get('skills_match', 0)),
+                    ("Experience",    scores.get('experience_relevance', 0)),
+                    ("Keyword density", scores.get('keyword_density', 0)),
+                    ("Culture fit",   scores.get('culture_fit', 0)),
+                    ("Seniority",     scores.get('seniority_alignment', 0)),
+                ]:
+                    bars_html += f"""
+                    <div class="bd-row">
+                        <div class="bd-label">{lab}</div>
+                        <div class="bd-track"><div class="bd-fill" style="width:{val:.0f}%"></div></div>
+                        <div class="bd-value">{val:.0f}</div>
+                    </div>"""
+                st.markdown(bars_html, unsafe_allow_html=True)
 
             st.divider()
 
