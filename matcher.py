@@ -1,8 +1,12 @@
+import logging
+import re
+
 from parser import extract_text_from_pdf, extract_email_from_pdf
 from preprocessing import clean_text
 from embedding import SemanticMatcher
 from skills import extract_skills
-import re
+
+logger = logging.getLogger(__name__)
 
 class EnhancedMatcher:
     """Enhanced ATS matcher with explainability and bias detection."""
@@ -115,6 +119,7 @@ class EnhancedMatcher:
     
     def detect_bias(self, cv_text, cv_name=""):
         """Detect potential bias indicators."""
+        logger.debug("Running bias detection (name=%r)", cv_name or "unnamed")
         bias_indicators = []
         cv_lower = cv_text.lower()
         
@@ -209,6 +214,7 @@ class EnhancedMatcher:
     
     def match_cv_to_job(self, cv_path, job_description, cv_name=""):
         """Enhanced matching with detailed analysis."""
+        logger.info("Matching CV: %s (name=%r)", cv_path, cv_name or "unnamed")
         cv_text = extract_text_from_pdf(cv_path)
         cv_text_clean = clean_text(cv_text)
         job_text_clean = clean_text(job_description)
@@ -240,6 +246,11 @@ class EnhancedMatcher:
         for skill in analysis['matched_skills'].keys():
             skill_proficiency[skill] = self.estimate_skill_proficiency(cv_text, skill)
         
+        logger.info(
+            "CV scored: score=%.1f confidence=%s matched=%d missing=%d",
+            final_score, confidence_level,
+            len(analysis['matched_skills']), len(analysis['missing_skills']),
+        )
         return {
             'final_score': final_score,
             'confidence_level': confidence_level,
@@ -265,7 +276,10 @@ class EnhancedMatcher:
             'job_seniority': analysis['job_seniority'],
             'candidate_email': candidate_email,
             'strategic_summary': self.generate_strategic_summary(analysis, final_score),
-            'improvement_areas': self.generate_improvement_areas(analysis)
+            'improvement_areas': self.generate_improvement_areas(analysis),
+            # Raw CV text exposed so the LLM analyzer can consume it without re-reading the file
+            'cv_text': cv_text,
+            'pre_analysis': analysis,
         }
 
     def generate_strategic_summary(self, analysis, score):

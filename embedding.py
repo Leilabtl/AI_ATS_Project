@@ -3,8 +3,11 @@ Enhanced embedding and scoring system for ATS.
 Provides semantic similarity with sophisticated analytics.
 """
 from collections import Counter
+import logging
 import math
 import re
+
+logger = logging.getLogger(__name__)
 
 class SemanticMatcher:
     """Enhanced semantic matching with explainability."""
@@ -134,6 +137,7 @@ class SemanticMatcher:
     
     def get_detailed_analysis(self, cv_text, job_text):
         """Get detailed analysis with comprehensive breakdown."""
+        logger.debug("get_detailed_analysis: cv_len=%d jd_len=%d", len(cv_text), len(job_text))
         # Extract skills from both
         cv_skills = self.extract_skills_with_weight(cv_text)
         job_skills = self.extract_skills_with_weight(job_text)
@@ -177,6 +181,10 @@ class SemanticMatcher:
         # Seniority alignment (0-100 points)
         seniority_match = 100 if cv_seniority == job_seniority else 70 if cv_seniority != 'unspecified' else 50
         
+        logger.debug(
+            "analysis complete: skills_match=%.1f semantic=%.1f matched=%d missing=%d",
+            skills_match, semantic_score, len(matched_skills), len(missing_skills),
+        )
         return {
             'skills_match': round(skills_match, 1),
             'semantic_similarity': round(semantic_score, 1),

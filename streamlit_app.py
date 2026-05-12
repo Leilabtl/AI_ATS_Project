@@ -3,6 +3,7 @@ from matcher import EnhancedMatcher
 from report_generator import ReportGenerator
 from advanced_features import AdvancedATS
 from candidate_pool import CandidatePool
+from llm_analyzer import LLMAnalyzer, get_analyzer_from_env
 import os
 import sys
 import subprocess
@@ -14,6 +15,13 @@ from io import BytesIO
 import json
 import zipfile
 from collections import Counter
+
+# Load .env if present (so ANTHROPIC_API_KEY can be set without the UI)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 JOB_TITLE_FILE = 'job_titles.json'
 
@@ -301,6 +309,10 @@ html, body, .stApp, .metric-card, .search-table, .nav-item, .sidebar-header, .pr
 if 'results' not in st.session_state:
     st.session_state.results = None
 
+# Bootstrap LLM analyzer from OPENAI_API_KEY in .env on first load
+if 'llm_analyzer' not in st.session_state:
+    st.session_state.llm_analyzer = get_analyzer_from_env()  # None if key not set
+
 # ── Top bar (Custom SaaS Layout) ─────────────────────────────────────────────
 st.markdown(f"""
 <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; border-bottom: 1px solid #e2e8f0; margin-bottom: 32px; background: white; margin-top: -6rem; margin-left: -5rem; margin-right: -5rem;">
@@ -499,7 +511,85 @@ with tab_analytics:
         - ✓ Split batches by role/department if needed
         - ✓ Use CSV export for further processing
         """)
-    
+
+    # ── GPT Market Intelligence ──────────────────────────────────────────────
+    st.divider()
+    st.subheader("🌐 GPT Market Intelligence")
+    st.markdown(
+        "Get GPT-powered strategic insights across your entire candidate pool: "
+        "talent supply analysis, JD optimisation tips, and hiring timeline estimates."
+    )
+
+    results_for_intel = st.session_state.get("results") or []
+    llm_intel = st.session_state.get("llm_analyzer")
+
+    if not results_for_intel:
+        st.info("Run a candidate analysis first (Job Setup tab) to unlock Market Intelligence.")
+    elif not llm_intel:
+        st.warning("Configure your OpenAI API key in the Settings tab to enable Market Intelligence.")
+    else:
+        intel_key = f"market_intel_{len(results_for_intel)}"
+        if intel_key not in st.session_state:
+            if st.button("🚀 Generate Market Intelligence Report", use_container_width=True):
+                job_title_intel = st.session_state.get("current_job_title", "this role")
+                job_desc_intel = st.session_state.get("job_desc", "")
+                with st.spinner("GPT is analysing your candidate pool..."):
+                    intel = llm_intel.generate_market_intelligence(
+                        results_for_intel, job_title_intel, job_desc_intel
+                    )
+                if intel:
+                    st.session_state[intel_key] = intel
+                    st.rerun()
+                else:
+                    st.error("Market intelligence generation failed. Check API key and retry.")
+
+        if intel_key in st.session_state:
+            intel = st.session_state[intel_key]
+
+            # Pool quality verdict
+            st.markdown(f"""
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-left:5px solid #16a34a;
+                        padding:16px 20px;border-radius:10px;margin-bottom:16px;">
+                <div style="font-weight:700;color:#166534;margin-bottom:6px;">
+                    🏆 Pool Quality Verdict
+                </div>
+                <div style="color:#14532d;font-size:1rem;line-height:1.6;">
+                    {intel.get("pool_quality_verdict", "—")}
+                </div>
+            </div>""", unsafe_allow_html=True)
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown("**📊 Talent Supply Summary**")
+                st.info(intel.get("talent_supply_summary", "—"))
+
+                st.markdown("**⏱ Hiring Timeline Estimate**")
+                st.info(intel.get("hiring_timeline_estimate", "—"))
+
+            with col2:
+                tips = intel.get("jd_optimisation_tips", [])
+                if tips:
+                    st.markdown("**✏️ JD Optimisation Tips**")
+                    for tip in tips:
+                        st.markdown(f"- {tip}")
+
+                actions = intel.get("recommended_actions", [])
+                if actions:
+                    st.markdown("**⚡ Recommended Actions**")
+                    for action in actions:
+                        st.markdown(f"- {action}")
+
+            insights = intel.get("market_insights", [])
+            if insights:
+                st.markdown("**💡 Market Insights**")
+                for insight in insights:
+                    st.markdown(f"""
+                    <div style="background:#eff6ff;border:1px solid #bfdbfe;padding:10px 14px;
+                                border-radius:8px;margin-bottom:8px;color:#1e40af;">
+                        💡 {insight}
+                    </div>""", unsafe_allow_html=True)
+
 with tab_settings:
     st.session_state.selected_sidebar_tab = "Settings"
     st.subheader("📋 Candidate Selection Settings")
@@ -605,6 +695,65 @@ with tab_settings:
             except Exception:
                 pass
         st.success("Saved job titles removed. Refresh the page to reload the default role list.")
+
+    # ── OpenAI GPT Configuration ──────────────────────────────────────────────
+    st.divider()
+    st.subheader("🤖 OpenAI GPT Deep Analysis")
+    st.markdown(
+        "Connect your OpenAI API key to unlock **GPT-powered analysis**: "
+        "genuine semantic understanding, chain-of-thought reasoning, nuanced executive "
+        "summaries, and contextual skill gap recommendations. "
+        "Get a key at [platform.openai.com](https://platform.openai.com)."
+    )
+
+    # Seed from env var on first load
+    if "openai_api_key" not in st.session_state:
+        st.session_state.openai_api_key = os.getenv("OPENAI_API_KEY", "")
+
+    api_key_input = st.text_input(
+        "OpenAI API Key",
+        value=st.session_state.openai_api_key,
+        type="password",
+        placeholder="sk-...",
+        help="Stored only in this browser session — never written to disk from here.",
+    )
+
+    col_save, col_status = st.columns([1, 2])
+    with col_save:
+        if st.button("💾 Save & Test Key", use_container_width=True):
+            if api_key_input.strip():
+                test_analyzer = LLMAnalyzer(api_key_input.strip())
+                with st.spinner("Testing connection to OpenAI..."):
+                    if test_analyzer.validate_key():
+                        st.session_state.openai_api_key = api_key_input.strip()
+                        st.session_state.llm_analyzer = test_analyzer
+                        st.success("✅ API key verified — GPT deep analysis enabled!")
+                    else:
+                        st.error("❌ Key validation failed. Check the key and try again.")
+            else:
+                st.warning("Please enter an API key first.")
+
+    with col_status:
+        llm = st.session_state.get("llm_analyzer")
+        if llm:
+            calls = llm.total_api_calls
+            cost = llm.estimated_cost_usd
+            st.markdown(
+                f'<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;'
+                f'padding:10px 14px;color:#166534;font-weight:600;margin-top:4px;">'
+                f"🟢 GPT Active — {calls} API call{'s' if calls != 1 else ''} this session "
+                f"(≈ ${cost:.4f} est. cost)"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                '<div style="background:#fefce8;border:1px solid #fde047;border-radius:8px;'
+                'padding:10px 14px;color:#854d0e;font-weight:600;margin-top:4px;">'
+                "🟡 GPT Not Configured — keyword matching only (set OPENAI_API_KEY in .env)"
+                "</div>",
+                unsafe_allow_html=True,
+            )
 
 with tab_pool:
     st.subheader("🌐 Candidate Pool Manager")
@@ -780,6 +929,20 @@ if process_button and job_title and job_description and uploaded_files:
             cv_name = Path(uploaded_file.name).stem
             result = matcher.match_cv_to_job(temp_path, job_description, cv_name)
             result['filename'] = uploaded_file.name
+
+            # ── Phase 2: Claude LLM deep analysis (if API key configured) ──
+            llm = st.session_state.get('llm_analyzer')
+            if llm is not None:
+                status_text.text(
+                    f"Processing {idx + 1}/{len(uploaded_files)}: {uploaded_file.name} — running Claude AI analysis..."
+                )
+                llm_result = llm.analyze_candidate(
+                    result.get('cv_text', ''),
+                    job_description,
+                    result.get('pre_analysis', {}),
+                )
+                result['llm_analysis'] = llm_result  # None if API call failed
+
             results.append(result)
         except Exception as e:
             st.error(f"Error processing {uploaded_file.name}: {str(e)}")
@@ -932,8 +1095,42 @@ if st.session_state.results:
     for idx, result in enumerate(results_sorted, 1):
         with st.expander(f"#{idx} - {result['filename']} ({result.get('confidence_level', 'Evaluated')}) 👤", expanded=(idx == 1)):
             
-            # 1. Executive Summary & Rationale (Unified)
-            if result.get('strategic_summary'):
+            # 1. Executive Summary — LLM version takes priority, keyword fallback otherwise
+            llm = result.get('llm_analysis')
+            if llm and llm.get('executive_summary'):
+                # ── Claude-generated executive summary ──
+                rec = llm.get('interview_recommendation', 'Consider')
+                rec_color = '#166534' if rec == 'Shortlist' else '#92400e' if rec == 'Consider' else '#991b1b'
+                rec_bg = '#f0fdf4' if rec == 'Shortlist' else '#fefce8' if rec == 'Consider' else '#fef2f2'
+                strengths_html = "".join(
+                    f'<li style="margin:4px 0;">{s}</li>'
+                    for s in llm.get('key_strengths', [])
+                )
+                st.markdown(f"""
+                <div style="background:#f8faff;border:1px solid #c7d7fe;border-left:5px solid #4f46e5;
+                            padding:20px;border-radius:12px;margin-bottom:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <h3 style="margin:0;color:#1e1b4b;font-size:1.15rem;">
+                            🤖 GPT — Executive Summary
+                        </h3>
+                        <span style="background:{rec_bg};color:{rec_color};font-weight:700;
+                                     padding:4px 12px;border-radius:20px;font-size:0.8rem;">
+                            {rec}
+                        </span>
+                    </div>
+                    <p style="color:#3730a3;font-size:1rem;line-height:1.65;margin:0 0 12px 0;">
+                        {llm['executive_summary']}
+                    </p>
+                    <div style="font-size:0.85rem;font-weight:700;color:#4338ca;margin-bottom:4px;">
+                        Key Strengths
+                    </div>
+                    <ul style="margin:0;padding-left:18px;color:#374151;font-size:0.9rem;">
+                        {strengths_html}
+                    </ul>
+                </div>
+                """, unsafe_allow_html=True)
+            elif result.get('strategic_summary'):
+                # ── Keyword-based fallback summary ──
                 st.markdown(f"""
                 <div style="background: #fdfcfe; border: 1px solid #e1e7ff; border-left: 5px solid #6366f1; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
                     <h3 style="margin-top: 0; color: #1e1b4b; display: flex; align-items: center; gap: 8px; font-size: 1.25rem;">
@@ -1042,10 +1239,54 @@ if st.session_state.results:
                         </div>
                         """, unsafe_allow_html=True)
 
-            # 7. Career Advice
+            # 7. Career Advice (keyword-based, always shown)
             if result.get('career_advice'):
                 st.info(f"💡 **Strategic Career Guidance:** {result['career_advice']}")
-            
+
+            # 8. Claude AI — Deep Skill Gap Analysis & Interview Prep
+            if llm:
+                st.divider()
+                st.markdown("### 🤖 GPT — Deep Analysis")
+
+                # Critical gaps with learning paths
+                gaps = llm.get('critical_gaps', [])
+                if gaps:
+                    st.markdown("**🔍 Critical Gaps (AI-identified)**")
+                    for gap in gaps:
+                        priority = gap.get('priority', 'medium')
+                        border_color = '#dc2626' if priority == 'high' else '#d97706' if priority == 'medium' else '#16a34a'
+                        st.markdown(f"""
+                        <div style="background:#fff;border:1px solid #e2e8f0;border-left:5px solid {border_color};
+                                    padding:14px 16px;border-radius:8px;margin-bottom:10px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <strong style="color:#0f172a;font-size:0.95rem;">{gap.get('skill','').title()}</strong>
+                                <span style="font-size:0.75rem;color:#64748b;font-weight:600;">
+                                    {gap.get('estimated_time','—')} · {priority.upper()} priority
+                                </span>
+                            </div>
+                            <div style="color:#475569;font-size:0.88rem;margin-top:6px;">
+                                <em>{gap.get('importance','')}</em>
+                            </div>
+                            <div style="color:#1e293b;font-size:0.9rem;margin-top:6px;">
+                                📚 {gap.get('learning_path','')}
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                else:
+                    st.success("✅ No critical skill gaps identified by Claude AI.")
+
+                # Interview focus areas
+                focus_areas = llm.get('interview_focus_areas', [])
+                if focus_areas:
+                    st.markdown("**🎤 Interview Focus Areas (AI-recommended)**")
+                    for area in focus_areas:
+                        st.markdown(f"- {area}")
+
+                # Career fit narrative
+                narrative = llm.get('career_fit_narrative', '')
+                if narrative:
+                    st.markdown(f"**🧭 Long-term Career Fit:** {narrative}")
+
             st.divider()
             
             # Individual PDF & Text Report Downloads
