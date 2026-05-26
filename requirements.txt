@@ -4,3 +4,5 @@ pdfplumber
 reportlab
 openai>=1.0.0
 python-dotenv
+scikit-learn>=1.3.0
+plotly>=5.18.0

@@ -58,33 +58,62 @@ class CandidatePool:
         self._save_pool()
         return job_id
     
-    def auto_assign_candidates(self, results, job_title, job_description, shortlist_threshold=70, longlist_threshold=50):
-        """Automatically assign candidates to job pools based on their scores."""
+    def auto_assign_candidates(
+        self,
+        results,
+        job_title,
+        job_description,
+        shortlist_threshold=70,
+        longlist_threshold=50,
+        use_ranking_mode=False,
+        shortlist_count=20,
+        longlist_count=200,
+    ):
+        """Assign candidates to shortlist / longlist / rejected pools.
+
+        Two modes:
+        - Score Threshold (default): each candidate's final_score is compared
+          against shortlist_threshold and longlist_threshold percentages.
+        - Ranking-Based: candidates are sorted by score; the top shortlist_count
+          go to shortlist, the next (longlist_count - shortlist_count) to longlist,
+          and the remainder are rejected.
+        """
+        if longlist_threshold >= shortlist_threshold:
+            raise ValueError(
+                f"longlist_threshold ({longlist_threshold}) must be strictly less than "
+                f"shortlist_threshold ({shortlist_threshold})."
+            )
+
         job_id = self.add_job(job_title, job_description)
-        
-        assigned_candidates = {
-            'shortlist': [],
-            'longlist': [],
-            'rejected': []
-        }
-        
-        for result in results:
-            score = result.get('final_score', 0)
-            if score >= shortlist_threshold:
-                category = 'shortlist'
-            elif score >= longlist_threshold:
-                category = 'longlist'
-            else:
-                category = 'rejected'
-            
-            # Add to pool
-            candidate_entry = self.add_candidate(result, job_id, job_title)
-            candidate_entry['category'] = category
-            assigned_candidates[category].append(candidate_entry)
-            
-            # Update job statistics
-            self._update_job_stats(job_id, category)
-        
+        assigned_candidates = {'shortlist': [], 'longlist': [], 'rejected': []}
+
+        if use_ranking_mode:
+            ordered = sorted(results, key=lambda r: r.get('final_score', 0), reverse=True)
+            for rank, result in enumerate(ordered):
+                if rank < shortlist_count:
+                    category = 'shortlist'
+                elif rank < longlist_count:
+                    category = 'longlist'
+                else:
+                    category = 'rejected'
+                candidate_entry = self.add_candidate(result, job_id, job_title)
+                candidate_entry['category'] = category
+                assigned_candidates[category].append(candidate_entry)
+                self._update_job_stats(job_id, category)
+        else:
+            for result in results:
+                score = result.get('final_score', 0)
+                if score >= shortlist_threshold:
+                    category = 'shortlist'
+                elif score >= longlist_threshold:
+                    category = 'longlist'
+                else:
+                    category = 'rejected'
+                candidate_entry = self.add_candidate(result, job_id, job_title)
+                candidate_entry['category'] = category
+                assigned_candidates[category].append(candidate_entry)
+                self._update_job_stats(job_id, category)
+
         self._save_pool()
         return job_id, assigned_candidates
     

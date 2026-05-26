@@ -219,7 +219,7 @@ class AdvancedATS:
         
         return analytics
     
-    def calculate_predictive_success_score(self, result, historical_data=None):
+    def calculate_predictive_success_score(self, result):
         """Calculate predictive success score based on patterns."""
         
         # Factors that predict success

@@ -25,7 +25,8 @@ class TestSemanticMatcher:
 
     def test_identical_texts_score_one(self):
         text = "python developer with machine learning and aws experience"
-        assert self.matcher.compute_similarity(text, text) == 1.0
+        # TF-IDF cosine similarity of identical texts is ~1.0; allow float epsilon.
+        assert abs(self.matcher.compute_similarity(text, text) - 1.0) < 1e-9
 
     def test_empty_cv_scores_zero(self):
         assert self.matcher.compute_similarity("", "python developer") == 0.0

@@ -4,7 +4,6 @@ import re
 from parser import extract_text_from_pdf, extract_email_from_pdf
 from preprocessing import clean_text
 from embedding import SemanticMatcher
-from skills import extract_skills
 
 logger = logging.getLogger(__name__)
 
@@ -141,35 +140,32 @@ class EnhancedMatcher:
         return bias_indicators
     
     def get_skill_gap_recommendations(self, missing_skills, matched_skills, analysis):
-        """Generate detailed, actionable learning roadmap for gaps."""
+        """Generate learning roadmap only for skills with real, curated intel."""
         recommendations = []
-        
-        # Determine priority based on JD importance
+
         for skill in missing_skills:
-            if len(skill) < 2: continue # Extra safety against single-letter garbage
-            
-            intel = self.skill_intel.get(skill.lower(), {
-                'importance': f'Specific technical requirement for {skill}.',
-                'roadmap': f'Acquire hands-on experience by building a small project using {skill}. Focus on core concepts and integration patterns.',
-                'impact': 'Technical alignment'
-            })
-            
-            # Simple heuristic for effort: 4 for complex, 2 for tools, 3 for languages
-            effort = 3
-            if skill.lower() in ['python', 'java', 'c++', 'c#', 'rust', 'machine learning', 'pytorch', 'tensorflow']:
-                effort = 4
-            elif skill.lower() in ['git', 'docker', 'jira', 'confluence', 'vba']:
-                effort = 2
-            
+            if len(skill) < 2:
+                continue
+            intel = self.skill_intel.get(skill.lower())
+            if not intel:
+                # No curated knowledge for this skill — skip rather than emit template garbage
+                continue
+
+            effort = 4 if skill.lower() in [
+                'python', 'java', 'c++', 'c#', 'rust', 'machine learning', 'pytorch', 'tensorflow'
+            ] else 2 if skill.lower() in [
+                'git', 'docker', 'jira', 'confluence', 'vba'
+            ] else 3
+
             recommendations.append({
                 'skill': skill,
-                'priority': 'high',  # Since it's a missing skill from JD
-                'suggestion': f"{intel.get('importance', 'Core proficiency')} {intel.get('roadmap', 'Focus on project-based learning.')}",
-                'impact': intel.get('impact', 'Career alignment'),
+                'priority': 'high',
+                'suggestion': f"{intel['importance']} {intel['roadmap']}",
+                'impact': intel['impact'],
                 'effort': effort,
                 'time': '2-4 weeks' if effort > 2 else '1 week'
             })
-        
+
         return sorted(recommendations, key=lambda x: x['effort'], reverse=True)
     
     def estimate_skill_proficiency(self, cv_text, skill_name):
@@ -285,7 +281,9 @@ class EnhancedMatcher:
     def generate_strategic_summary(self, analysis, score):
         """Generate a detailed, nuanced summary of the match."""
         matched_str = ', '.join(list(analysis['matched_skills'].keys())[:3])
-        missing_str = ', '.join(list(analysis['missing_skills'].keys())[:2])
+        # Only name skills we have real intel for — avoids surfacing extracted JD verbs
+        real_missing = [s for s in analysis['missing_skills'] if s.lower() in self.skill_intel]
+        missing_str = ', '.join(real_missing[:2])
         
         if score >= 85:
             summary = f"**Exceptional candidate** with {score}% alignment. "
@@ -315,13 +313,16 @@ class EnhancedMatcher:
     def generate_improvement_areas(self, analysis):
         """Synthesize specific, actionable areas for candidate improvement."""
         areas = []
-        if analysis['missing_skills']:
-            skills = list(analysis['missing_skills'].keys())[:3]
+        # Only report skills we have real curated intel for — no template filler
+        skills_with_intel = [
+            s for s in analysis['missing_skills']
+            if self.skill_intel.get(s.lower())
+        ][:3]
+        if skills_with_intel:
             mastery_text = "**Technical Mastery Required:** "
-            for s in skills:
-                intel = self.skill_intel.get(s.lower(), {})
-                roadmap = intel.get('roadmap', f"Study fundamentals of {s.title()}.")
-                mastery_text += f"\n- **{s.title()}**: {roadmap}"
+            for s in skills_with_intel:
+                intel = self.skill_intel[s.lower()]
+                mastery_text += f"\n- **{s.title()}**: {intel['roadmap']}"
             areas.append(mastery_text)
         
         if analysis['seniority_alignment'] < 80:

@@ -4,12 +4,22 @@ from report_generator import ReportGenerator
 from advanced_features import AdvancedATS
 from candidate_pool import CandidatePool
 from llm_analyzer import LLMAnalyzer, get_analyzer_from_env
+from roles_data import ROLES, ROLE_LIST, SENIORITY_LEVELS, SENIORITY_CONTEXT
+from pipeline import process_cv_batch
+from ui_components import (
+    candidate_name as _candidate_name,
+    render_score_gauge,
+    render_score_breakdown,
+    render_gpt_card,
+    render_keyword_summary_card,
+)
 import os
+import re
 import sys
 import subprocess
-import tempfile
 from pathlib import Path
 import pandas as pd
+import plotly.express as px
 from datetime import datetime
 from io import BytesIO
 import json
@@ -24,6 +34,7 @@ except ImportError:
     pass
 
 JOB_TITLE_FILE = 'job_titles.json'
+
 
 def load_saved_job_titles(file_path=JOB_TITLE_FILE):
     if os.path.exists(file_path):
@@ -346,145 +357,172 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
+# Defaults so other tabs can always reference these variables regardless of
+# which tab is active or whether the Job Setup tab has been completed.
+job_title = ""
+job_description = ""
+uploaded_files = []
+process_button = False
+
 # Main app tabs
 tab_job, tab_pool, tab_analytics, tab_settings = st.tabs(["Job Setup", "Candidate Pool", "Analytics", "Settings"])
 
 with tab_job:
         st.session_state.selected_sidebar_tab = "Job Setup"
-        predefined_roles = [
-            "Senior Python Developer",
-            "Data Scientist",
-            "Product Manager",
-            "DevOps Engineer",
-            "HR Analyst",
-            "AI/ML Engineer",
-            "Backend Engineer",
-            "Frontend Engineer",
-            "QA Engineer",
-            "Business Analyst"
-        ]
 
-        saved_roles = load_saved_job_titles()
-        all_roles = sorted(set(predefined_roles + saved_roles), key=str.lower)
+        # ── Role title (searchbox autocomplete) ───────────────────────────────
+        saved_roles   = load_saved_job_titles()
+        custom_roles  = sorted([r for r in saved_roles if r not in ROLES], key=str.lower)
+        _all_titles   = ROLE_LIST + custom_roles   # full searchable list
 
-        role_descriptions = {
-            "Senior Python Developer": "Build and maintain scalable backend services, strong experience in Python, REST APIs, and cloud deployment.",
-            "Data Scientist": "Design models, perform data analysis, and build data-driven products using Python, SQL, and ML frameworks.",
-            "Product Manager": "Lead product lifecycle from ideation to launch with cross-functional alignment and metrics-driven roadmap.",
-            "DevOps Engineer": "Automate deployment pipelines, manage infrastructure as code, and ensure system reliability.",
-            "HR Analyst": "Analyze hiring metrics, build dashboards, and support workforce planning with data insights.",
-            "AI/ML Engineer": "Develop ML models, optimize algorithms, and deploy scalable AI solutions in production.",
-            "Backend Engineer": "Design robust server-side systems, database schemas, and API endpoints for high-performance apps.",
-            "Frontend Engineer": "Implement responsive UI components and optimize user experience with modern web frameworks.",
-            "QA Engineer": "Build test automation, run end-to-end tests, and ensure quality across release cycles.",
-            "Business Analyst": "Gather requirements, define workflow processes, and translate business needs into technical specs."
-        }
+        col_role, col_seniority = st.columns([3, 1])
 
-        selected_role = st.selectbox(
-            "🏷️ Select Job Title (or choose Other)",
-            options=all_roles + ["Other"],
-            index=0,
-            key="job_title_dropdown"
-        )
-
-        if selected_role == "Other":
-            job_title = st.text_input(
-                "✏️ Enter custom job title:",
-                placeholder="e.g., Machine Learning Operations Lead",
-                key="job_title_custom"
+        with col_role:
+            _CUSTOM_ROLE = "── Enter custom role ──"
+            _select_opts = [""] + _all_titles + [_CUSTOM_ROLE]
+            _selected = st.selectbox(
+                "Job Title",
+                options=_select_opts,
+                index=0,
+                format_func=lambda x: "🔍 Select or type a role…" if x == "" else x,
+                key="role_selectbox",
+                help="Start typing to filter predefined roles. Choose the last option to enter any custom title.",
             )
-            if job_title and job_title.strip():
-                job_title = job_title.strip()
-                if job_title not in all_roles:
-                    all_roles.append(job_title)
-                    save_job_titles(all_roles)
+            if _selected == _CUSTOM_ROLE:
+                base_role = st.text_input(
+                    "Custom Role Title",
+                    placeholder="e.g. DevRel Engineer, AI Researcher…",
+                    key="custom_role_input",
+                ).strip()
+                if base_role and base_role not in _all_titles:
+                    save_job_titles(saved_roles + [base_role])
+            else:
+                base_role = _selected.strip()
+
+        with col_seniority:
+            seniority = st.selectbox(
+                "Seniority Level",
+                options=["(not specified)"] + SENIORITY_LEVELS,
+                index=0,
+                key="seniority_level",
+                help="Select the required experience level for this role.",
+            )
+
+        # Derived full job title shown as info pill
+        _seniority_prefix = "" if seniority == "(not specified)" else seniority + " "
+        job_title = (_seniority_prefix + base_role).strip() if base_role else ""
+        if job_title:
+            st.info(f"**Posting as:** {job_title}", icon="🏷️")
         else:
-            job_title = selected_role
+            st.warning("Type a role title above to continue.", icon="⚠️")
 
-        # Initialize or update job description in session state
-        if 'job_desc' not in st.session_state:
-            st.session_state.job_desc = role_descriptions.get(selected_role, '') if selected_role != 'Other' else ''
-            st.session_state.last_selected_role = selected_role
+        # ── Job description: auto-fill + seniority context injection ──────────
+        _ctx  = SENIORITY_CONTEXT.get(seniority, "") if seniority != "(not specified)" else ""
+        _base_jd = ROLES.get(base_role, "")   # empty string for custom roles
 
-        if selected_role != 'Other' and st.session_state.get('last_selected_role') != selected_role:
-            st.session_state.job_desc = role_descriptions.get(selected_role, '')
-            st.session_state.last_selected_role = selected_role
-
-        if selected_role == 'Other' and st.session_state.get('last_selected_role') != 'Other':
-            st.session_state.job_desc = ''
-            st.session_state.last_selected_role = 'Other'
+        # Recompute default JD whenever base_role or seniority changes
+        _state_key = f"{base_role}||{seniority}"
+        if st.session_state.get("_jd_state_key") != _state_key:
+            st.session_state["_jd_state_key"] = _state_key
+            if _ctx and _base_jd:
+                st.session_state.job_desc = _ctx + "\n\n" + _base_jd
+            elif _ctx:
+                st.session_state.job_desc = _ctx
+            elif _base_jd:
+                st.session_state.job_desc = _base_jd
+            # else: custom role with no seniority — leave blank for user to write
 
         job_description = st.text_area(
-            "📝 Job Description:",
-            height=150,
-            value=st.session_state.job_desc,
-            key="job_desc"
+            "Job Description",
+            height=320,
+            value=st.session_state.get("job_desc", ""),
+            key="job_desc",
+            help="Auto-filled from the template. Edit freely — your edits are used for scoring.",
         )
-        
-        uploaded_files = st.file_uploader(
-            "📤 Upload CVs (PDF)",
-            type="pdf",
-            accept_multiple_files=True
-        )
-        
-        process_button = st.button("🚀 Analyze Candidates", type="primary", use_container_width=True)
+
+        if job_title:
+            uploaded_files = st.file_uploader(
+                "📤 Upload CVs (PDF)",
+                type="pdf",
+                accept_multiple_files=True
+            )
+            process_button = st.button("🚀 Analyze Candidates", type="primary", use_container_width=True)
+        else:
+            st.info("Select a role title above to continue.", icon="👆")
     
 with tab_analytics:
-    st.markdown("""
-        ### 🎯 About This System
-        
-        **Features:**
-        - ✅ Multi-CV ranking
-        - ✅ Explainable scoring
-        - ✅ Skill gap analysis
-        - ✅ Bias detection
-        - ✅ Proficiency estimation
-        - ✅ Learning recommendations
-        - ✅ Longlist/Shortlist
-        - ✅ PDF Reports
-        - ✅ Email Templates (BCC Ready)
-        - ✅ Batch Processing
-        
-        **Scoring Formula:**
-        ```
-        35% Semantic Match
-        25% Skills Match
-        15% Experience
-        15% Keyword Density
-        5% Culture Fit
-        5% Seniority
-        ```
-        
-        ### 📦 Batch Import Capabilities
-        
-        **File Limits:**
-        - 📄 **Per File:** Up to 50 MB per PDF
-        - 📤 **Per Upload:** Streamlit default 200 MB total
-        - 🔢 **Candidate Limit:** Up to 500+ CVs recommended
-        
-        **Processing Performance:**
-        - ⚡ ~1-2 seconds per candidate
-        - 📊 50 candidates: 1-2 minutes
-        - 📊 100 candidates: 2-4 minutes
-        - 📊 500 candidates: 10-15 minutes
-        
-        **How to Import Large Batches:**
-        1. 📋 Select all CVs using Ctrl+A in file picker
-        2. 🚀 Click "Analyze Candidates"
-        3. ⏳ Monitor progress in the interface
-        4. 📊 Export results once complete
-        
-        **Limitations:**
-        - For 1000+ candidates, consider splitting imports
-        - Streamlit may timeout on very large batches (>1000)
-        - Maximum session memory: ~2GB
-        
-        **Tips for Large Batches:**
-        - ✓ Ensure PDFs are text-based (not scanned images)
-        - ✓ Use consistent naming for easier tracking
-        - ✓ Split batches by role/department if needed
-        - ✓ Use CSV export for further processing
-        """)
+    _analytics_results = st.session_state.get("results") or []
+
+    if not _analytics_results:
+        st.info("Run a candidate analysis first (Job Setup tab) to see charts here.", icon="📊")
+    else:
+        st.subheader("📊 Candidate Pool Analytics")
+
+        # ── Score distribution histogram ──────────────────────────────────────
+        _scores = [r.get("final_score", 0) for r in _analytics_results]
+        _score_df = pd.DataFrame({"Final Score": _scores})
+        _fig_hist = px.histogram(
+            _score_df,
+            x="Final Score",
+            nbins=10,
+            range_x=[0, 100],
+            color_discrete_sequence=["#6366f1"],
+            labels={"Final Score": "Final Score (0–100)", "count": "Candidates"},
+            title="Score Distribution",
+        )
+        _fig_hist.update_layout(bargap=0.1, plot_bgcolor="white", paper_bgcolor="white",
+                                title_font_size=16, margin=dict(t=40, b=30))
+        st.plotly_chart(_fig_hist, use_container_width=True)
+
+        _col_pie, _col_bar = st.columns(2)
+
+        # ── Seniority breakdown pie ───────────────────────────────────────────
+        with _col_pie:
+            _seniority_counts = Counter(
+                r.get("cv_seniority", "unspecified")
+                for r in _analytics_results
+            )
+            _sen_df = pd.DataFrame(
+                _seniority_counts.items(), columns=["Seniority", "Count"]
+            )
+            _fig_pie = px.pie(
+                _sen_df,
+                names="Seniority",
+                values="Count",
+                color_discrete_sequence=px.colors.qualitative.Pastel,
+                title="Seniority Breakdown",
+            )
+            _fig_pie.update_layout(title_font_size=16, margin=dict(t=40, b=10))
+            st.plotly_chart(_fig_pie, use_container_width=True)
+
+        # ── Top matched skills bar chart ──────────────────────────────────────
+        with _col_bar:
+            _all_matched: list[str] = []
+            for r in _analytics_results:
+                _all_matched.extend(r.get("matched_skills", []))
+            _skill_counts = Counter(_all_matched).most_common(12)
+            if _skill_counts:
+                _sk_df = pd.DataFrame(_skill_counts, columns=["Skill", "Candidates"])
+                _fig_bar = px.bar(
+                    _sk_df,
+                    x="Candidates",
+                    y="Skill",
+                    orientation="h",
+                    color="Candidates",
+                    color_continuous_scale="Teal",
+                    title="Top Matched Skills",
+                )
+                _fig_bar.update_layout(
+                    yaxis=dict(autorange="reversed"),
+                    coloraxis_showscale=False,
+                    plot_bgcolor="white",
+                    paper_bgcolor="white",
+                    title_font_size=16,
+                    margin=dict(t=40, b=10),
+                )
+                st.plotly_chart(_fig_bar, use_container_width=True)
+            else:
+                st.info("No matched skills data available.")
 
     # ── GPT Market Intelligence ──────────────────────────────────────────────
     st.divider()
@@ -607,58 +645,78 @@ with tab_settings:
         st.session_state.shortlist_threshold = 70
         st.session_state.longlist_threshold = 50
         
-    else:  # Threshold-based
-        st.info("🎯 Categorize candidates by minimum score (%) and limit counts")
-        
+    else:  # Score Threshold-based
+        st.info("📊 Every candidate is classified purely by their match score — no fixed count caps apply.")
+
         shortlist_threshold = st.slider(
             "🎯 Shortlist Threshold (%)",
-            min_value=0,
+            min_value=1,
             max_value=100,
-            value=70,
+            value=st.session_state.get('shortlist_threshold', 70),
             step=5,
-            help="Minimum score to be shortlisted"
+            key="shortlist_thresh_slider",
+            help="Score ≥ this value → automatically shortlisted for interview.",
         )
-        
+
+        # Constrain longlist max to one step below shortlist so the invariant
+        # longlist < shortlist is enforced at the slider level, not just post-hoc.
+        _ll_max = max(0, shortlist_threshold - 1)
+        _ll_default = max(0, min(st.session_state.get('longlist_threshold', 50), _ll_max))
         longlist_threshold = st.slider(
             "📋 Longlist Threshold (%)",
             min_value=0,
-            max_value=100,
-            value=50,
+            max_value=_ll_max,
+            value=_ll_default,
             step=5,
-            help="Minimum score to be longlisted (must be less than shortlist)"
+            key="longlist_thresh_slider",
+            help="Score ≥ this value (but below shortlist threshold) → longlisted. Below → rejected.",
         )
-        
-        if shortlist_threshold <= longlist_threshold:
-            st.error("⚠️ Shortlist threshold must be higher than longlist threshold!")
-        
-        # Add count limits for threshold mode
-        max_candidates = len(st.session_state.results) if st.session_state.results else 500
-        
-        shortlist_count = st.slider(
-            "🎯 Max Shortlist Size",
-            min_value=1,
-            max_value=max(max_candidates, 50),
-            value=min(20, max_candidates),
-            help="Maximum number of candidates to shortlist (from those meeting threshold)"
-        )
-        
-        longlist_count = st.slider(
-            "📋 Max Longlist Size",
-            min_value=1,
-            max_value=max(max_candidates, 200),
-            value=min(200, max_candidates),
-            help="Maximum number of candidates to longlist (from those meeting threshold)"
-        )
-        
+
+        # Boundary validation — belt-and-suspenders after slider constraint
+        _thresholds_valid = shortlist_threshold > longlist_threshold
+        if not _thresholds_valid:
+            st.error("⚠️ Shortlist threshold must be strictly higher than the longlist threshold.")
+        else:
+            # Visual score-band preview
+            st.markdown(f"""
+            <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;
+                        margin:16px 0;font-size:13px;font-weight:600;">
+                <div style="background:#f0fdf4;border-bottom:1px solid #e2e8f0;
+                            padding:10px 16px;display:flex;justify-content:space-between;">
+                    <span>🎯 Shortlist</span>
+                    <span style="color:#16a34a;">score ≥ {shortlist_threshold}%</span>
+                </div>
+                <div style="background:#eff6ff;border-bottom:1px solid #e2e8f0;
+                            padding:10px 16px;display:flex;justify-content:space-between;">
+                    <span>📋 Longlist</span>
+                    <span style="color:#2563eb;">{longlist_threshold}% ≤ score &lt; {shortlist_threshold}%</span>
+                </div>
+                <div style="background:#fef2f2;padding:10px 16px;
+                            display:flex;justify-content:space-between;">
+                    <span>❌ Rejected</span>
+                    <span style="color:#dc2626;">score &lt; {longlist_threshold}%</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # Persist — counts set to a high sentinel so downstream ranking-mode
+        # slicing never accidentally caps threshold-classified results.
         st.session_state.use_thresholds = True
         st.session_state.shortlist_threshold = shortlist_threshold
         st.session_state.longlist_threshold = longlist_threshold
-        st.session_state.longlist_count = longlist_count
-        st.session_state.shortlist_count = shortlist_count
-    
+        st.session_state.shortlist_count = 9999
+        st.session_state.longlist_count = 9999
+
     st.divider()
-    st.caption(f"📊 Longlist: Top {longlist_count} candidates")
-    st.caption(f"🎯 Shortlist: Top {shortlist_count} candidates")
+    if st.session_state.get('use_thresholds', False):
+        _st = st.session_state.get('shortlist_threshold', 70)
+        _lt = st.session_state.get('longlist_threshold', 50)
+        st.caption(f"🎯 Shortlist: candidates with score ≥ {_st}%")
+        st.caption(f"📋 Longlist:  candidates with {_lt}% ≤ score < {_st}%")
+        st.caption(f"❌ Rejected:  candidates with score < {_lt}%")
+    else:
+        st.caption(f"📊 Longlist: top {longlist_count} candidates by score")
+        st.caption(f"🎯 Shortlist: top {shortlist_count} candidates by score")
 
     st.divider()
     if st.button("🗑️ Clear saved job titles", type="secondary"):
@@ -804,7 +862,7 @@ with tab_pool:
                                 cat_candidates = [c for c in candidates if c.get('category') == category]
                                 if cat_candidates:
                                     cat_df = pd.DataFrame([{
-                                        'Candidate': c['filename'],
+                                        'Candidate': _candidate_name(c['filename']),
                                         'Email': c['email'],
                                         'Score': f"{c['final_score']}%",
                                         'Seniority': c['cv_seniority'].title(),
@@ -848,7 +906,7 @@ with tab_pool:
                 if candidates:
                     st.subheader(f"👥 Candidates for {selected_job_display}")
                     pool_df = pd.DataFrame([{
-                        'Candidate': c['filename'],
+                        'Candidate': _candidate_name(c['filename']),
                         'Email': c['email'],
                         'Category': c.get('category', 'unassigned').title(),
                         'Score': f"{c['final_score']}%",
@@ -888,42 +946,19 @@ if process_button and job_title and job_description and uploaded_files:
     
     progress_bar = st.progress(0)
     status_text = st.empty()
-    
-    results = []
-    
-    for idx, uploaded_file in enumerate(uploaded_files):
-        status_text.text(f"Processing {idx + 1}/{len(uploaded_files)}: {uploaded_file.name}")
-        progress_bar.progress((idx + 1) / len(uploaded_files))
-        
-        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_file:
-            tmp_file.write(uploaded_file.getbuffer())
-            temp_path = tmp_file.name
-        
-        try:
-            cv_name = Path(uploaded_file.name).stem
-            result = matcher.match_cv_to_job(temp_path, job_description, cv_name)
-            result['filename'] = uploaded_file.name
 
-            # ── Phase 2: Claude LLM deep analysis (if API key configured) ──
-            llm = st.session_state.get('llm_analyzer')
-            if llm is not None:
-                status_text.text(
-                    f"Processing {idx + 1}/{len(uploaded_files)}: {uploaded_file.name} — running Claude AI analysis..."
-                )
-                llm_result = llm.analyze_candidate(
-                    result.get('cv_text', ''),
-                    job_description,
-                    result.get('pre_analysis', {}),
-                )
-                result['llm_analysis'] = llm_result  # None if API call failed
+    results, errors = process_cv_batch(
+        uploaded_files,
+        job_description,
+        matcher,
+        llm_analyzer=st.session_state.get('llm_analyzer'),
+        progress_cb=lambda frac: progress_bar.progress(frac),
+        status_cb=lambda msg: status_text.text(msg),
+    )
 
-            results.append(result)
-        except Exception as e:
-            st.error(f"Error processing {uploaded_file.name}: {str(e)}")
-        finally:
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-    
+    for fname, err_msg in errors:
+        st.error(f"Error processing {fname}: {err_msg}")
+
     status_text.empty()
     progress_bar.empty()
     
@@ -944,13 +979,17 @@ if process_button and job_title and job_description and uploaded_files:
     pool = st.session_state.candidate_pool
     st.session_state.current_job_title = job_title
     
-    # Auto-assign candidates to pools based on thresholds
-    shortlist_threshold = st.session_state.get('shortlist_threshold', 70)
-    longlist_threshold = st.session_state.get('longlist_threshold', 50)
-    
+    # Auto-assign candidates to pools (mode-aware)
+    _use_ranking = not st.session_state.get('use_thresholds', False)
     job_id, assigned = pool.auto_assign_candidates(
-        results, job_title, job_description, 
-        shortlist_threshold, longlist_threshold
+        results,
+        job_title,
+        job_description,
+        shortlist_threshold=st.session_state.get('shortlist_threshold', 70),
+        longlist_threshold=st.session_state.get('longlist_threshold', 50),
+        use_ranking_mode=_use_ranking,
+        shortlist_count=st.session_state.get('shortlist_count', 20),
+        longlist_count=st.session_state.get('longlist_count', 200),
     )
     
     # Summary of assignment
@@ -974,6 +1013,8 @@ if process_button and job_title and job_description and uploaded_files:
     # SAVE RESULTS TO SESSION STATE
     st.session_state.results = results
     st.rerun()
+
+
 
 
 # ── Results Processing & Rendering (New) ──────────────────────────────────────
@@ -1026,7 +1067,7 @@ if st.session_state.results:
     for idx, r in enumerate(results_sorted, 1):
         score = r['final_score']
         opacity_class = "" if score >= 80 else " mid" if score >= 60 else " low"
-        display_name = r['filename'].replace('.pdf','').replace('.txt','').replace('.docx','')
+        display_name = _candidate_name(r['filename'])
         initials = "".join(w[0].upper() for w in display_name.split()[:2]) or display_name[:2].upper()
         seniority = r['cv_seniority'].title()
         matched = len(r['matched_skills'])
@@ -1042,210 +1083,234 @@ if st.session_state.results:
         </div>"""
 
     st.markdown(f'<div class="cand-list">{rows_html}</div>', unsafe_allow_html=True)
-    
+
+    # ── Native Section Navigation (Option B: horizontal column row) ───────────
     st.divider()
-    
-    # === DETAILED ANALYSIS ===
-    st.markdown('<div style="font-weight: 700; font-size: 1.25rem; color: var(--text-main); margin: 2rem 0 1rem 0;">📊 Detailed Candidate Analysis</div>', unsafe_allow_html=True)
+    _nc1, _nc2, _nc3, _nc4, _nc5 = st.columns(5)
+    _nav_defs = [
+        (_nc1, "📊 Candidate\nAnalysis",    "#sec-analysis"),
+        (_nc2, "⚖️ Comparative\nAnalysis",  "#sec-compare"),
+        (_nc3, "🎯 HR\nRecommendations",    "#sec-recommend"),
+        (_nc4, "📧 Email\n& Reports",       "#sec-reports"),
+        (_nc5, "🎤 Interview\nPrep",        "#sec-interview"),
+    ]
+    for _col, _label, _href in _nav_defs:
+        with _col:
+            st.markdown(
+                f'<a href="{_href}" style="display:block;text-align:center;padding:10px 6px;'
+                'background:#f8fafc;border-radius:10px;text-decoration:none;'
+                'color:#374151;font-size:12px;font-weight:600;border:1px solid #e2e8f0;'
+                f'white-space:pre-line;line-height:1.4;">{_label}</a>',
+                unsafe_allow_html=True,
+            )
+    st.divider()
+
+    # ── Section 1: Detailed Candidate Analysis ────────────────────────────────
+    st.markdown('<div id="sec-analysis"></div>', unsafe_allow_html=True)
+    st.subheader("📊 Detailed Candidate Analysis")
+    st.caption("Individual scoring breakdown, skill profiles, gap analysis & roadmaps")
     
     for idx, result in enumerate(results_sorted, 1):
-        with st.expander(f"#{idx} - {result['filename']} ({result.get('confidence_level', 'Evaluated')}) 👤", expanded=(idx == 1)):
+        with st.expander(f"#{idx} — {_candidate_name(result['filename'])} ({result.get('confidence_level', 'Evaluated')})", expanded=(idx == 1)):
             
             # 1. Executive Summary — LLM version takes priority, keyword fallback otherwise
             llm = result.get('llm_analysis')
             if llm and llm.get('executive_summary'):
-                rec = llm.get('interview_recommendation', 'Consider')
-                rec_cls = 'rec-shortlist' if rec == 'Shortlist' else 'rec-consider' if rec == 'Consider' else 'rec-decline'
-                strengths_html = "".join(
-                    f'<div style="font-size:13px;color:#4B5563;margin-bottom:4px;">· {s}</div>'
-                    for s in llm.get('key_strengths', [])
-                )
-                st.markdown(f"""
-                <div class="gpt-card">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                        <div class="gpt-card-title">GPT Executive Summary</div>
-                        <span class="rec-badge {rec_cls}">{rec}</span>
-                    </div>
-                    <div style="font-size:14px;color:#4B5563;line-height:1.65;margin-bottom:14px;">
-                        {llm['executive_summary']}
-                    </div>
-                    <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;
-                                color:#9CA3AF;font-weight:600;margin-bottom:8px;">Key strengths</div>
-                    {strengths_html}
-                </div>
-                """, unsafe_allow_html=True)
+                render_gpt_card(llm)
             elif result.get('strategic_summary'):
-                st.markdown(f"""
-                <div class="gpt-card">
-                    <div class="gpt-card-title">Match Summary</div>
-                    <div style="font-size:14px;color:#4B5563;line-height:1.65;">
-                        {result['strategic_summary']}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                render_keyword_summary_card(result['strategic_summary'])
 
             # 2. Score gauge + breakdown
             final_score = result['final_score']
-            r_val = 60
-            circumference = 2 * 3.14159 * r_val
-            offset = circumference * (1 - final_score / 100)
-            fit_label = "Strong fit" if final_score >= 80 else "Good fit" if final_score >= 65 else "Partial fit" if final_score >= 50 else "Low fit"
             confidence = result.get('confidence_level', '')
 
             col_a, col_b = st.columns([1, 2])
             with col_a:
-                st.markdown(f"""
-                <div class="gauge-wrap">
-                    <svg width="140" height="140" viewBox="0 0 140 140">
-                        <circle cx="70" cy="70" r="{r_val}" fill="none" stroke="#ECEEF1" stroke-width="8"/>
-                        <circle cx="70" cy="70" r="{r_val}" fill="none" stroke="#4F46E5" stroke-width="8"
-                                stroke-dasharray="{circumference:.1f}" stroke-dashoffset="{offset:.1f}"
-                                stroke-linecap="round" transform="rotate(-90 70 70)"/>
-                    </svg>
-                    <div style="margin-top:-84px;margin-bottom:70px;font-size:38px;font-weight:600;
-                                color:#0F1115;letter-spacing:-0.03em;text-align:center;line-height:1;">
-                        {final_score:.0f}
-                    </div>
-                    <div class="gauge-label">{fit_label}</div>
-                    <div class="gauge-sub">{confidence} confidence</div>
-                </div>
-                """, unsafe_allow_html=True)
+                render_score_gauge(final_score, confidence)
 
             with col_b:
                 scores = result.get('score_breakdown', {})
-                bars_html = '<div class="section-eyebrow">Score breakdown</div>'
-                for lab, val in [
-                    ("Keyword match", scores.get('semantic_similarity', 0)),
-                    ("Skills match",  scores.get('skills_match', 0)),
-                    ("Experience",    scores.get('experience_relevance', 0)),
-                    ("Keyword density", scores.get('keyword_density', 0)),
-                    ("Culture fit",   scores.get('culture_fit', 0)),
-                    ("Seniority",     scores.get('seniority_alignment', 0)),
-                ]:
-                    bars_html += f"""
-                    <div class="bd-row">
-                        <div class="bd-label">{lab}</div>
-                        <div class="bd-track"><div class="bd-fill" style="width:{val:.0f}%"></div></div>
-                        <div class="bd-value">{val:.0f}</div>
-                    </div>"""
-                st.markdown(bars_html, unsafe_allow_html=True)
+                render_score_breakdown(scores)
 
             st.divider()
 
             # 3. Gap Analysis & Roadmap
-            if result.get('improvement_areas'):
-                st.markdown("### 🛠️ Strategic Gap Analysis")
-                for area in result['improvement_areas']:
-                    if len(area) > 10: # Ensure it's a real sentence
-                        st.markdown(f"""
-                        <div style="background: #fff; border: 1px solid #e2e8f0; border-left: 5px solid #f43f5e; padding: 12px 16px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                            {area}
-                        </div>
-                        """, unsafe_allow_html=True)
+            _raw_areas = result.get('improvement_areas', [])
+            # Strip markdown and filter out any residual template filler
+            _gap_items = [
+                re.sub(r'\*\*(.+?)\*\*', r'\1', a).strip()
+                for a in _raw_areas
+                if len(a.strip()) > 20
+                and 'Study fundamentals of' not in a
+                and 'Acquire hands-on experience' not in a
+            ]
+            if _gap_items:
+                st.markdown("### 🛠️ Key Concerns for This Candidate")
+                _gaps_html = ""
+                _icons = ["⚠️", "📉", "🎯", "💼"]
+                for _gi, _gap_text in enumerate(_gap_items):
+                    _icon = _icons[_gi % len(_icons)]
+                    _gaps_html += f"""
+                    <div style="display:flex;gap:14px;align-items:flex-start;
+                                background:#fffbf0;border:1px solid #fde68a;border-radius:10px;
+                                padding:14px 18px;margin-bottom:10px;
+                                box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                        <div style="font-size:20px;flex-shrink:0;margin-top:1px;">{_icon}</div>
+                        <div style="font-size:14px;color:#374151;line-height:1.7;">{_gap_text}</div>
+                    </div>"""
+                st.markdown(_gaps_html, unsafe_allow_html=True)
 
             st.divider()
 
-            # 4. Verified Skills (Clean Native Layout)
+            # 4. Verified Skills
             st.markdown("### 🎯 Verified Technical Expertise")
             valid_skills = [s.strip() for s in result.get('matched_skills', []) if len(s.strip()) > 1]
-            
             if valid_skills:
-                # Use columns for skills to ensure perfect rendering without HTML leaks
-                skill_cols = st.columns(3)
-                for i, skill in enumerate(valid_skills):
+                _skills_html = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">'
+                for skill in valid_skills:
                     proficiency = result.get('skill_proficiency', {}).get(skill, 'Verified')
-                    with skill_cols[i % 3]:
-                        st.markdown(f"**✓ {skill.title()}** ({proficiency})")
+                    _skills_html += f"""<div style="background:#f0fdf4;border:1px solid #bbf7d0;
+                        color:#15803d;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:500;">
+                        ✓ {skill.title()} <span style="opacity:.65;font-size:11px;">· {proficiency}</span></div>"""
+                _skills_html += '</div>'
+                st.markdown(_skills_html, unsafe_allow_html=True)
             else:
                 st.info("🔍 No specific technical skill matches identified.")
 
-            # 5. Missing Skills (Bulleted Roadmap with Explanations)
-            st.markdown("### 📈 Priority Development Areas")
-            
-            # Filter and sanitize
-            blacklist_categories = ['languages', 'skills', 'tools', 'technologies', 'experience', 'development', 'management']
-            valid_recommendations = [
-                rec for rec in result.get('recommendations', []) 
-                if len(rec.get('skill', '').strip()) > 1 
-                and rec.get('skill', '').lower() not in blacklist_categories
-            ]
-            
-            if valid_recommendations:
-                for rec in valid_recommendations[:6]: # Show top 6 priorities
-                    skill_name = rec.get('skill', 'Technology').upper()
-                    impact = rec.get('impact', 'Technical Debt')
-                    suggestion = rec.get('suggestion', 'Review documentation')
-                    
-                    st.markdown(f"""
-                    *   **{skill_name}**: {suggestion}
-                        *   *Impact*: {impact} | *Effort*: {rec.get('effort', 2)}/4
-                    """)
-            else:
-                st.success("✨ Critical JD skills appear to be well-aligned.")
-
-            # 6. Detailed Learning Roadmap
-            if result.get('recommendations'):
-                with st.expander("📚 View Detailed Professional Development Roadmap"):
-                    for rec in result['recommendations']:
-                        priority_icon = "🚀" if rec.get('effort', 2) > 3 else "📚"
-                        st.markdown(f"""
-                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid {'#e11d48' if rec.get('effort', 2) > 3 else '#f59e0b'}; padding: 16px; border-radius: 12px; margin-bottom: 12px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <strong style="font-size: 1rem; color: #0f172a;">{priority_icon} {rec.get('skill', 'Technology').title()}</strong>
-                                <span style="background: #f1f5f9; color: #475569; padding: 2px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">{rec.get('time', '2 Weeks')} Effort</span>
+            # 5. Priority Development Areas
+            # When GPT analysis is available its critical_gaps section (below) is authoritative —
+            # don't also show the Phase 1 keyword-based recommendations which have no real insight.
+            if not llm:
+                st.markdown("### 📈 Priority Development Areas")
+                blacklist_categories = ['languages', 'skills', 'tools', 'technologies',
+                                        'experience', 'development', 'management']
+                valid_recommendations = [
+                    rec for rec in result.get('recommendations', [])
+                    if len(rec.get('skill', '').strip()) > 1
+                    and rec.get('skill', '').lower() not in blacklist_categories
+                ]
+                if valid_recommendations:
+                    _recs_html = ""
+                    for rec in valid_recommendations[:6]:
+                        _effort = rec.get('effort', 2)
+                        _priority_label = "High Priority" if _effort >= 3 else "Medium Priority" if _effort >= 2 else "Lower Priority"
+                        _priority_bg    = "#fef2f2" if _effort >= 3 else "#fffbeb" if _effort >= 2 else "#f0f9ff"
+                        _priority_color = "#dc2626" if _effort >= 3 else "#d97706" if _effort >= 2 else "#0369a1"
+                        _border_color   = "#fca5a5" if _effort >= 3 else "#fcd34d" if _effort >= 2 else "#7dd3fc"
+                        _suggestion = re.sub(r'\*\*(.+?)\*\*', r'\1', rec.get('suggestion', '')).strip()
+                        _impact     = re.sub(r'\*\*(.+?)\*\*', r'\1', rec.get('impact', 'Career growth')).strip()
+                        _recs_html += f"""
+                        <div style="background:#fff;border:1px solid {_border_color};border-radius:10px;
+                                    padding:16px 18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                <div style="font-size:15px;font-weight:700;color:#0f172a;">
+                                    {rec.get('skill','Skill').title()}
+                                </div>
+                                <span style="background:{_priority_bg};color:{_priority_color};
+                                             border:1px solid {_border_color};padding:3px 10px;
+                                             border-radius:20px;font-size:11px;font-weight:700;
+                                             letter-spacing:.04em;">{_priority_label}</span>
                             </div>
-                            <div style="font-size: 0.95rem; color: #334155; line-height: 1.5;">{rec.get('suggestion')}</div>
-                            <div style="margin-top: 8px; font-size: 0.8rem; color: #64748b; font-style: italic;">Impact: {rec.get('impact', 'Career Growth')}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                            <div style="font-size:13.5px;color:#374151;line-height:1.6;margin-bottom:10px;">
+                                {_suggestion}
+                            </div>
+                            <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                                <div style="font-size:12px;color:#6b7280;">
+                                    <span style="font-weight:600;color:#374151;">Impact:</span> {_impact}
+                                </div>
+                                <div style="font-size:12px;color:#6b7280;">
+                                    <span style="font-weight:600;color:#374151;">Estimated effort:</span> {rec.get('time', '2–4 weeks')}
+                                </div>
+                            </div>
+                        </div>"""
+                    st.markdown(_recs_html, unsafe_allow_html=True)
+                else:
+                    st.info("💡 Add your OpenAI API key in Settings to get AI-powered skill gap analysis for this candidate.")
 
             # 7. Career Advice (keyword-based, always shown)
             if result.get('career_advice'):
                 st.info(f"💡 **Strategic Career Guidance:** {result['career_advice']}")
 
-            # 8. Claude AI — Deep Skill Gap Analysis & Interview Prep
+            # 8. GPT Deep Analysis
             if llm:
                 st.divider()
-                st.markdown("### 🤖 GPT — Deep Analysis")
+                st.markdown("### 🤖 AI Deep Analysis")
 
-                # Critical gaps with learning paths
                 gaps = llm.get('critical_gaps', [])
-                if gaps:
-                    st.markdown("**🔍 Critical Gaps (AI-identified)**")
-                    for gap in gaps:
-                        priority = gap.get('priority', 'medium')
-                        border_color = '#dc2626' if priority == 'high' else '#d97706' if priority == 'medium' else '#16a34a'
-                        st.markdown(f"""
-                        <div style="background:#fff;border:1px solid #e2e8f0;border-left:5px solid {border_color};
-                                    padding:14px 16px;border-radius:8px;margin-bottom:10px;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;">
-                                <strong style="color:#0f172a;font-size:0.95rem;">{gap.get('skill','').title()}</strong>
-                                <span style="font-size:0.75rem;color:#64748b;font-weight:600;">
-                                    {gap.get('estimated_time','—')} · {priority.upper()} priority
-                                </span>
-                            </div>
-                            <div style="color:#475569;font-size:0.88rem;margin-top:6px;">
-                                <em>{gap.get('importance','')}</em>
-                            </div>
-                            <div style="color:#1e293b;font-size:0.9rem;margin-top:6px;">
-                                📚 {gap.get('learning_path','')}
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                else:
-                    st.success("✅ No critical skill gaps identified by Claude AI.")
-
-                # Interview focus areas
                 focus_areas = llm.get('interview_focus_areas', [])
-                if focus_areas:
-                    st.markdown("**🎤 Interview Focus Areas (AI-recommended)**")
-                    for area in focus_areas:
-                        st.markdown(f"- {area}")
-
-                # Career fit narrative
                 narrative = llm.get('career_fit_narrative', '')
+
+                if gaps:
+                    st.markdown(
+                        '<div style="font-size:13px;font-weight:700;letter-spacing:.07em;'
+                        'text-transform:uppercase;color:#6b7280;margin-bottom:10px;">'
+                        'Critical skill gaps identified by AI</div>',
+                        unsafe_allow_html=True
+                    )
+                    _gaps_gpt_html = ""
+                    for gap in gaps:
+                        _p = gap.get('priority', 'medium').lower()
+                        _p_label = "High priority" if _p == 'high' else "Medium priority" if _p == 'medium' else "Lower priority"
+                        _p_color = "#dc2626" if _p == 'high' else "#d97706" if _p == 'medium' else "#16a34a"
+                        _p_bg    = "#fef2f2" if _p == 'high' else "#fffbeb" if _p == 'medium' else "#f0fdf4"
+                        _p_border = "#fca5a5" if _p == 'high' else "#fcd34d" if _p == 'medium' else "#86efac"
+                        _importance = re.sub(r'\*\*(.+?)\*\*', r'\1', gap.get('importance', '')).strip()
+                        _learning   = re.sub(r'\*\*(.+?)\*\*', r'\1', gap.get('learning_path', '')).strip()
+                        _gaps_gpt_html += f"""
+                        <div style="background:#fff;border:1px solid {_p_border};border-radius:10px;
+                                    padding:16px 18px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                <div style="font-size:15px;font-weight:700;color:#0f172a;">
+                                    {gap.get('skill','').title()}
+                                </div>
+                                <div style="display:flex;gap:8px;align-items:center;">
+                                    <span style="background:{_p_bg};color:{_p_color};border:1px solid {_p_border};
+                                                 padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">
+                                        {_p_label}
+                                    </span>
+                                    <span style="font-size:12px;color:#6b7280;">
+                                        {gap.get('estimated_time','—')}
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="font-size:13px;color:#64748b;font-style:italic;margin-bottom:8px;">
+                                {_importance}
+                            </div>
+                            <div style="background:#f8fafc;border-radius:6px;padding:10px 12px;
+                                        font-size:13.5px;color:#1e293b;line-height:1.6;">
+                                <span style="font-weight:600;color:#374151;">Recommended path: </span>{_learning}
+                            </div>
+                        </div>"""
+                    st.markdown(_gaps_gpt_html, unsafe_allow_html=True)
+                else:
+                    st.success("✅ No critical skill gaps identified — this candidate is a strong technical match.")
+
+                if focus_areas:
+                    _fa_html = (
+                        '<div style="font-size:13px;font-weight:700;letter-spacing:.07em;'
+                        'text-transform:uppercase;color:#6b7280;margin:16px 0 10px 0;">'
+                        'Recommended interview focus areas</div>'
+                        '<div style="display:flex;flex-direction:column;gap:8px;">'
+                    )
+                    for _i, _area in enumerate(focus_areas, 1):
+                        _fa_html += f"""
+                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;
+                                    padding:10px 14px;font-size:13.5px;color:#374151;display:flex;gap:10px;">
+                            <span style="font-weight:700;color:#6366f1;min-width:20px;">{_i}.</span>
+                            <span>{_area}</span>
+                        </div>"""
+                    _fa_html += '</div>'
+                    st.markdown(_fa_html, unsafe_allow_html=True)
+
                 if narrative:
-                    st.markdown(f"**🧭 Long-term Career Fit:** {narrative}")
+                    _narrative_clean = re.sub(r'\*\*(.+?)\*\*', r'\1', narrative).strip()
+                    st.markdown(
+                        f'<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;'
+                        f'padding:14px 18px;margin-top:14px;font-size:14px;color:#0369a1;line-height:1.65;">'
+                        f'<span style="font-weight:700;">🧭 Long-term career fit: </span>{_narrative_clean}'
+                        f'</div>',
+                        unsafe_allow_html=True
+                    )
 
             st.divider()
             
@@ -1300,25 +1365,172 @@ if st.session_state.results:
                         </div>
                         """, unsafe_allow_html=True)
     
-    # === COMPARATIVE ANALYSIS ===
+    # ── Section 2: Comparative Analysis ──────────────────────────────────────
     if len(results_sorted) > 1:
+        st.markdown('<div id="sec-compare"></div>', unsafe_allow_html=True)
         st.divider()
-        st.markdown('<div class="premium-header">📈 Comparative Analysis</div>', unsafe_allow_html=True)
-        
-        comparison_df = pd.DataFrame({
-            'Candidate': [r['filename'] for r in results_sorted],
-            'Final Score': [r['final_score'] for r in results_sorted],
-            'Semantic': [r['score_breakdown']['semantic_similarity'] for r in results_sorted],
-            'Skills': [r['score_breakdown']['skills_match'] for r in results_sorted],
-            'Experience': [r['score_breakdown']['experience_relevance'] for r in results_sorted],
-            'Keywords': [r['score_breakdown']['keyword_density'] for r in results_sorted],
-        })
-        
-        st.bar_chart(comparison_df.set_index('Candidate'), use_container_width=True)
+        st.subheader("⚖️ Comparative Analysis")
+        st.caption("Dimension-by-dimension comparison, winner banner & candidate verdicts")
+
+        _cpal = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4']
+
+        def _skills_list(r, key):
+            """Return skills as a list regardless of whether the field is a dict or list."""
+            val = r.get(key, [])
+            return list(val.keys()) if isinstance(val, dict) else list(val)
+
+        def _get_score(r, path):
+            parts = path.split('.')
+            v = r
+            for p in parts:
+                v = v.get(p, 0) if isinstance(v, dict) else 0
+            return float(v or 0)
+
+        _best = results_sorted[0]
+        _best_name = _candidate_name(_best.get('filename', ''))
+        _best_score = _best['final_score']
+        _best_llm = _best.get('llm_analysis') or {}
+        _best_rec = _best_llm.get('interview_recommendation', '')
+        _best_score_color = '#16a34a' if _best_score >= 75 else '#f59e0b' if _best_score >= 50 else '#ef4444'
+
+        # ── Winner banner (all values pre-computed — no nested f-strings) ──────
+        _rec_badge = ''
+        if _best_rec:
+            _rc = {'Shortlist': '#16a34a', 'Consider': '#d97706', 'Decline': '#dc2626'}.get(_best_rec, '#6366f1')
+            _rec_badge = (
+                f'<span style="background:{_rc}22;color:{_rc};font-weight:700;'
+                f'font-size:12px;padding:3px 10px;border-radius:20px;margin-left:10px;">'
+                f'{_best_rec}</span>'
+            )
+        st.markdown(
+            f'<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;'
+            f'padding:22px 28px;margin-bottom:20px;">'
+            f'<div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;'
+            f'color:#16a34a;margin-bottom:6px;">Top Recommended Candidate</div>'
+            f'<div style="font-size:24px;font-weight:800;color:#0f172a;margin-bottom:6px;">'
+            f'🏆 {_best_name}</div>'
+            f'<div style="font-size:14px;color:#374151;">Overall match score: '
+            f'<strong style="color:{_best_score_color};">{_best_score:.0f}%</strong>'
+            f'{_rec_badge}</div>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+        # ── Dimension comparison — one st.markdown per dimension row ───────────
+        _dims = [
+            ("Overall Match Score", "final_score"),
+            ("Skills Match",        "score_breakdown.skills_match"),
+            ("Experience",          "score_breakdown.experience_relevance"),
+            ("Keyword Overlap",     "score_breakdown.semantic_similarity"),
+            ("Culture Fit",         "score_breakdown.culture_fit"),
+            ("Seniority Fit",       "score_breakdown.seniority_alignment"),
+        ]
+
+        st.markdown(
+            '<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;'
+            'color:#9ca3af;margin:18px 0 10px 0;">Dimension-by-dimension comparison</div>',
+            unsafe_allow_html=True
+        )
+
+        for _dim_label, _dim_key in _dims:
+            # Build entire row as one string — no conditionals inside HTML
+            _row = (
+                f'<div style="margin-bottom:16px;">'
+                f'<div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:6px;">'
+                f'{_dim_label}</div>'
+            )
+            for _ci, _r in enumerate(results_sorted):
+                _cn = _candidate_name(_r['filename'])
+                _v  = _get_score(_r, _dim_key)
+                _dot_col  = _cpal[_ci % len(_cpal)]
+                _bar_col  = '#16a34a' if _v >= 75 else '#f59e0b' if _v >= 50 else '#ef4444'
+                _v_int    = int(_v)
+                _row += (
+                    f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;">'
+                    f'<div style="width:130px;font-size:12px;color:#6b7280;'
+                    f'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;">'
+                    f'<span style="display:inline-block;width:9px;height:9px;border-radius:50%;'
+                    f'background:{_dot_col};margin-right:6px;vertical-align:middle;"></span>'
+                    f'{_cn}</div>'
+                    f'<div style="flex:1;background:#f1f5f9;border-radius:4px;height:12px;overflow:hidden;">'
+                    f'<div style="width:{_v_int}%;height:100%;background:{_bar_col};border-radius:4px;"></div>'
+                    f'</div>'
+                    f'<div style="width:36px;text-align:right;font-size:12px;font-weight:700;'
+                    f'color:{_bar_col};">{_v_int}</div>'
+                    f'</div>'
+                )
+            _row += '</div>'
+            st.markdown(_row, unsafe_allow_html=True)
+
+        # ── Candidate verdict cards ────────────────────────────────────────────
+        st.markdown(
+            '<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;'
+            'color:#9ca3af;margin:24px 0 12px 0;">Candidate verdicts</div>',
+            unsafe_allow_html=True
+        )
+        _card_cols = st.columns(min(len(results_sorted), 3))
+        _ranks = ['🥇', '🥈', '🥉']
+        for _ci, _r in enumerate(results_sorted):
+            _cn     = _candidate_name(_r['filename'])
+            _sc     = _r['final_score']
+            _col    = _cpal[_ci % len(_cpal)]
+            _scol   = '#16a34a' if _sc >= 75 else '#f59e0b' if _sc >= 50 else '#ef4444'
+            _llm    = _r.get('llm_analysis') or {}
+            _rec    = _llm.get('interview_recommendation', '')
+            _rank   = _ranks[_ci] if _ci < 3 else f'#{_ci + 1}'
+
+            # Matched and missing — handle list or dict
+            _match_list   = _skills_list(_r, 'matched_skills')[:3]
+            _missing_list = [s for s in _skills_list(_r, 'missing_skills') if len(s) > 2][:3]
+            _strengths    = [re.sub(r'\*\*(.+?)\*\*', r'\1', s).strip()
+                             for s in _llm.get('key_strengths', [])[:2]]
+
+            # Build card as one clean string
+            _card = (
+                f'<div style="background:#fff;border-top:4px solid {_col};border:1px solid #e2e8f0;'
+                f'border-radius:12px;padding:18px;box-shadow:0 2px 6px rgba(0,0,0,0.05);">'
+                f'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">'
+                f'<div><div style="font-size:20px;">{_rank}</div>'
+                f'<div style="font-size:15px;font-weight:800;color:#0f172a;">{_cn}</div></div>'
+                f'<div style="text-align:right;">'
+                f'<div style="font-size:28px;font-weight:800;color:{_scol};line-height:1;">{_sc:.0f}</div>'
+                f'<div style="font-size:10px;color:#9ca3af;">/ 100</div></div>'
+                f'</div>'
+            )
+            if _rec:
+                _rbg = {'Shortlist': '#f0fdf4', 'Consider': '#fffbeb', 'Decline': '#fef2f2'}.get(_rec, '#f8fafc')
+                _rcl = {'Shortlist': '#16a34a', 'Consider': '#d97706', 'Decline': '#dc2626'}.get(_rec, '#6b7280')
+                _card += (
+                    f'<div style="background:{_rbg};color:{_rcl};font-size:11px;font-weight:700;'
+                    f'letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;'
+                    f'border-radius:20px;display:inline-block;margin-bottom:10px;">{_rec}</div>'
+                )
+            show_skills = _strengths or _match_list
+            if show_skills:
+                _card += (
+                    '<div style="font-size:11px;font-weight:700;color:#9ca3af;'
+                    'text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">'
+                    + ('Strengths' if _strengths else 'Matched skills') + '</div>'
+                )
+                for _s in (show_skills):
+                    _card += f'<div style="font-size:12px;color:#374151;margin-bottom:3px;">&#10003; {_s.title()}</div>'
+            if _missing_list:
+                _card += (
+                    '<div style="font-size:11px;font-weight:700;color:#9ca3af;'
+                    'text-transform:uppercase;letter-spacing:.06em;margin:10px 0 5px 0;">Key gaps</div>'
+                )
+                for _g in _missing_list:
+                    _card += f'<div style="font-size:12px;color:#dc2626;margin-bottom:3px;">&#10007; {_g.title()}</div>'
+            _card += '</div>'
+
+            with _card_cols[_ci % 3]:
+                st.markdown(_card, unsafe_allow_html=True)
     
-    # === LONGLIST & SHORTLIST ===
+    # ── Section 3: HR Recommendations & Selection ────────────────────────────
+    st.markdown('<div id="sec-recommend"></div>', unsafe_allow_html=True)
     st.divider()
-    st.markdown('<div class="premium-header">📋 Longlist & 🎯 Shortlist</div>', unsafe_allow_html=True)
+    st.subheader("🎯 HR Recommendations & Selection")
+    st.caption("Shortlist, longlist, tier verdicts & hiring next-steps")
     
     # Determine longlist and shortlist based on mode
     if st.session_state.get('use_thresholds', False):
@@ -1340,7 +1552,7 @@ if st.session_state.results:
         if longlist:
             long_df = pd.DataFrame([{
                 'Rank': f"#{i+1}",
-                'Candidate': r['filename'],
+                'Candidate': _candidate_name(r['filename']),
                 'Score': f"{r['final_score']}%"
             } for i, r in enumerate(longlist)])
             st.dataframe(long_df, hide_index=True, use_container_width=True)
@@ -1353,7 +1565,7 @@ if st.session_state.results:
         if shortlist:
             short_df = pd.DataFrame([{
                 'Rank': f"#{i+1}",
-                'Candidate': r['filename'],
+                'Candidate': _candidate_name(r['filename']),
                 'Fit': r.get('confidence_level', 'Strong')
             } for i, r in enumerate(shortlist)])
             st.dataframe(short_df, hide_index=True, use_container_width=True)
@@ -1365,99 +1577,156 @@ if st.session_state.results:
     # === RECOMMENDATIONS ===
     st.divider()
     st.markdown('<div class="premium-header">🎯 HR Recommendations</div>', unsafe_allow_html=True)
-    
+    st.markdown(
+        '<p style="color:#6B7280;font-size:14px;margin-bottom:24px;">'
+        f'Ranked assessment of all {len(results_sorted)} candidate(s) — sorted by match score.</p>',
+        unsafe_allow_html=True,
+    )
+
     if not results_sorted:
-        st.warning("⚠️ No candidates meet the minimum threshold requirements. Please adjust your settings and try again.")
+        st.warning("No candidates meet the minimum threshold. Adjust settings and re-run.")
     else:
-        top_candidate = results_sorted[0]
-        
-        if top_candidate['final_score'] >= 85:
-            st.success(f"""
-            ### ✅ EXCELLENT MATCH
-            **{top_candidate['filename']}** - {top_candidate['final_score']}%
-            
-            {top_candidate.get('strategic_summary', 'This candidate is highly qualified and aligns exceptionally well with requirements.')}
-            
-            **Key strengths:**
-            {"\n".join([f'- {s.title()}' for s in top_candidate.get('matched_skills', [])[:3]])}
-            
-            **Recommendation:** Immediate interview - top priority candidate.
-            """)
-        elif top_candidate['final_score'] >= 70:
-            st.info(f"""
-            ### ⭐ STRONG MATCH
-            **{top_candidate['filename']}** - {top_candidate['final_score']}%
-            
-            {top_candidate.get('strategic_summary', 'This candidate shows good alignment with role requirements.')}
-            
-            **Focus areas:**
-            {"\n".join([f'- {area}' for area in top_candidate.get('improvement_areas', [])[:2]])}
-            
-            **Recommendation:** Schedule interview. Discuss learning commitment for skill gaps.
-            """)
-        elif top_candidate['final_score'] >= 60:
-            st.warning(f"""
-            ### 🟡 MODERATE MATCH
-            **{top_candidate['filename']}** - {top_candidate['final_score']}%
-            
-            {top_candidate.get('strategic_summary', 'This candidate has potential but significant gaps exist.')}
-            
-            **Gap Analysis:**
-            {"\n".join([f'- {area}' for area in top_candidate.get('improvement_areas', [])[:3]])}
-            
-            **Recommendation:** Consider for growth-focused role or with training support.
-            """)
-        else:
-            st.error(f"""
-            ### 🔴 WEAK MATCH
-            **{top_candidate['filename']}** - {top_candidate['final_score']}%
-            
-            {top_candidate.get('strategic_summary', 'This candidate does not meet core requirements.')}
-            
-            **Critical Gaps:**
-            {"\n".join([f'- {area}' for area in top_candidate.get('improvement_areas', [])]) or "- No critical gaps detected."}
-            
-            **Recommendation:** Consider for different roles or revisit later after skill development.
-            """)
-            
-            # Export summary (only if there are candidates)
-            st.divider()
-            st.markdown('<div class="premium-header">📥 Export & Reports</div>', unsafe_allow_html=True)
-            
-            # PDF Reports Section
-            st.markdown("### 📄 PDF Reports")
-            pdf_col1, pdf_col2 = st.columns(2)
-            
-            with pdf_col1:
-                st.subheader("🎯 Comprehensive PDF Report")
-                try:
-                    pdf_data = report_gen.generate_pdf_report(
-                        results_sorted,
-                        job_description,
-                        st.session_state.longlist_count,
-                        st.session_state.shortlist_count
-                    )
-                    st.download_button(
-                        label="📥 Download PDF Report",
-                        data=pdf_data,
-                        file_name=f"ATS_Report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
-                    st.caption("Professional PDF with all candidate rankings and scores")
-                except Exception as e:
-                    st.error(f"Error generating PDF: {str(e)}")
-            
-            with pdf_col2:
-                st.subheader("📊 Candidates Summary")
-                st.metric("Total Candidates", len(results_sorted))
-        st.metric("Shortlist", min(st.session_state.shortlist_count, len(results_sorted)))
-        st.metric("Longlist", min(st.session_state.longlist_count, len(results_sorted)))
+        import re as _re2
+
+        def _clean_name(filename):
+            n = filename
+            for ext in ('.pdf', '.PDF', '.txt', '.docx', '.doc'):
+                n = n.replace(ext, '')
+            n = _re2.sub(r'\b(cv|resume|job|curriculum|vitae|application|\d{4,})\b', '', n, flags=_re2.IGNORECASE)
+            n = _re2.sub(r'[\s_\-\.]+', ' ', n).strip()
+            words = [w for w in n.split() if len(w) > 1]
+            return ' '.join(words[:2]).title() if words else filename.split('.')[0].title()
+
+        def _strip_md(text):
+            return _re2.sub(r'\*\*(.+?)\*\*', r'\1', text or '')
+
+        all_cards_html = ""
+
+        for _rank, _c in enumerate(results_sorted, 1):
+            _score     = _c['final_score']
+            _name      = _clean_name(_c['filename'])
+            _seniority = _c.get('cv_seniority', 'unspecified').title()
+            _matched   = [s.title() for s in _c.get('matched_skills', []) if len(s) > 1][:6]
+            _missing   = [s.title() for s in _c.get('missing_skills', []) if len(s) > 1][:5]
+            _summary   = _strip_md(_c.get('strategic_summary', ''))
+
+            # GPT analysis takes priority for summary
+            _llm = _c.get('llm_analysis') or {}
+            if _llm.get('executive_summary'):
+                _summary = _llm['executive_summary']
+            _gpt_rec = _llm.get('interview_recommendation', '')
+
+            # Tier colours and labels
+            if _score >= 85:
+                _border, _bg      = '#059669', '#f0fdf4'
+                _badge_col        = '#059669'
+                _label            = 'Excellent Match'
+                _next_step        = 'Move to interview immediately. This is a top-priority candidate who meets or exceeds all core requirements.'
+                _hr_note          = 'Allocate senior interviewer time. Candidate is likely fielding competing offers.'
+            elif _score >= 70:
+                _border, _bg      = '#2563eb', '#eff6ff'
+                _badge_col        = '#2563eb'
+                _label            = 'Strong Match'
+                _next_step        = 'Schedule a technical interview within the week. Explore the identified skill gaps during the conversation.'
+                _hr_note          = 'Ask about learning agility and recent upskilling. Gaps are bridgeable.'
+            elif _score >= 60:
+                _border, _bg      = '#d97706', '#fffbeb'
+                _badge_col        = '#d97706'
+                _label            = 'Moderate Match'
+                _next_step        = 'Consider for a growth-focused or junior variant of the role, or hold for a future opening.'
+                _hr_note          = 'Discuss onboarding support and a structured 90-day ramp plan if moving forward.'
+            else:
+                _border, _bg      = '#dc2626', '#fef2f2'
+                _badge_col        = '#dc2626'
+                _label            = 'Weak Match'
+                _next_step        = 'Not recommended for this role at this time. Send a respectful rejection.'
+                _hr_note          = 'Keep on file if the role evolves or a junior position opens up.'
+
+            # Score ring colour
+            _ring_pct = int(_score)
+
+            # Build skills pills HTML
+            def _pills(items, color, check):
+                if not items:
+                    return '<span style="color:#9CA3AF;font-size:13px;">None identified</span>'
+                return ''.join(
+                    f'<span style="display:inline-block;background:{color}22;color:{color};'
+                    f'border:1px solid {color}44;border-radius:20px;padding:2px 10px;'
+                    f'font-size:12px;font-weight:600;margin:3px 3px 3px 0;">{check} {p}</span>'
+                    for p in items
+                )
+
+            _skill_pills   = _pills(_matched, '#059669', '✓')
+            _gap_pills     = _pills(_missing, '#dc2626', '✗')
+            _gpt_badge     = (f'<span style="background:#7c3aed;color:#fff;font-size:10px;'
+                              f'font-weight:700;padding:2px 8px;border-radius:12px;margin-left:8px;">'
+                              f'GPT: {_gpt_rec}</span>') if _gpt_rec else ''
+
+            all_cards_html += f"""
+<div style="border:1.5px solid {_border};border-radius:14px;background:{_bg};
+            padding:24px 28px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+
+  <!-- Header row -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;
+              flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+    <div>
+      <div style="font-size:11px;color:#9CA3AF;font-weight:600;letter-spacing:.06em;
+                  text-transform:uppercase;margin-bottom:4px;">#{_rank} of {len(results_sorted)} · {_seniority}</div>
+      <div style="font-size:22px;font-weight:700;color:#0F1115;letter-spacing:-0.02em;">
+        {_name}{_gpt_badge}
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="text-align:center;">
+        <div style="font-size:36px;font-weight:800;color:{_border};line-height:1;">{_ring_pct}<span style="font-size:16px;">%</span></div>
+        <div style="font-size:11px;color:#9CA3AF;margin-top:2px;">match score</div>
+      </div>
+      <div style="background:{_badge_col};color:#fff;font-size:12px;font-weight:700;
+                  padding:6px 16px;border-radius:20px;letter-spacing:.04em;">
+        {_label}
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:18px;
+              padding:12px 16px;background:rgba(0,0,0,0.03);border-radius:8px;">
+    {_summary if _summary else 'No summary available.'}
+  </div>
+
+  <!-- Skills grid -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
+    <div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+                  color:#059669;margin-bottom:8px;">Verified Skills</div>
+      <div>{_skill_pills}</div>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+                  color:#dc2626;margin-bottom:8px;">Skill Gaps</div>
+      <div>{_gap_pills}</div>
+    </div>
+  </div>
+
+  <!-- Next step -->
+  <div style="border-top:1px solid {_border}33;padding-top:14px;margin-top:4px;">
+    <div style="font-size:13px;color:#374151;margin-bottom:6px;">
+      <strong style="color:{_border};">Next step:</strong> {_next_step}
+    </div>
+    <div style="font-size:12px;color:#6B7280;font-style:italic;">
+      💼 HR note: {_hr_note}
+    </div>
+  </div>
+
+</div>"""
+
+        st.markdown(all_cards_html, unsafe_allow_html=True)
     
+    # ── Section 4: Email Templates & Reports ──────────────────────────────────
+    st.markdown('<div id="sec-reports"></div>', unsafe_allow_html=True)
     st.divider()
-    
-    # Email Templates Section
-    st.markdown("### 📧 Email Templates (BCC Ready)")
+    st.subheader("📧 Email Templates & Reports")
+    st.caption("BCC-ready shortlist / longlist / rejection emails and CSV exports")
     
     email_tab1, email_tab2, email_tab3 = st.tabs(["🎉 Shortlist Emails", "📋 Longlist Emails", "❌ Rejection Emails"])
     
@@ -1473,7 +1742,7 @@ if st.session_state.results:
         st.text_input("Subject Line:", value=shortlist_template['subject'], disabled=True)
         
         st.text_area("Email Body (with placeholders):", value=shortlist_template['body'], height=200, disabled=True, key="shortlist_email_body")
-        
+
         bcc_display = shortlist_template['bcc_list'].replace(", ", "\n")
         st.text_area("📧 BCC List (one per line):", value=bcc_display, height=150, disabled=True, key="shortlist_bcc_list")
         
@@ -1509,7 +1778,7 @@ if st.session_state.results:
         st.text_input("Subject Line:", value=longlist_template['subject'], disabled=True)
         
         st.text_area("Email Body:", value=longlist_template['body'], height=200, disabled=True, key="longlist_email_body")
-        
+
         bcc_display = longlist_template['bcc_list'].replace(", ", "\n")
         st.text_area("📧 BCC List (one per line):", value=bcc_display, height=150, disabled=True, key="longlist_bcc_list")
         
@@ -1545,7 +1814,7 @@ if st.session_state.results:
         st.text_input("Subject Line:", value=rejected_template['subject'], disabled=True)
         
         st.text_area("Email Body:", value=rejected_template['body'], height=200, disabled=True, key="rejected_email_body")
-        
+
         bcc_display = rejected_template['bcc_list'].replace(", ", "\n")
         st.text_area("📧 BCC List (one per line):", value=bcc_display, height=150, disabled=True, key="rejected_bcc_list")
         
@@ -1659,7 +1928,7 @@ if st.session_state.results:
             rejected_rows += f"""
             <tr class="search-row">
                 <td class="search-cell" style="font-weight: 700; color: #ef4444;">#{idx}</td>
-                <td class="search-cell" style="color: white; font-weight: 600;">{r['filename']}</td>
+                <td class="search-cell" style="color: white; font-weight: 600;">{_candidate_name(r['filename'])}</td>
                 <td class="search-cell" style="color: #ef4444; font-weight: 700;">{r['final_score']}%</td>
                 <td class="search-cell" style="color: #94a3b8;">{r['cv_seniority'].title()}</td>
             </tr>
@@ -1699,10 +1968,12 @@ if st.session_state.results:
                     use_container_width=True
                 )
     
-            # === ADVANCED ENTERPRISE FEATURES ===
-            st.divider()
-            st.markdown('<div class="premium-header">🚀 Advanced Analytics & Features</div>', unsafe_allow_html=True)
-    
+    # ── Section 5: Interview Prep & Advanced Analytics ────────────────────────
+    st.markdown('<div id="sec-interview"></div>', unsafe_allow_html=True)
+    st.divider()
+    st.subheader("🎤 Interview Prep & Advanced Analytics")
+    st.caption("AI interview questions, diversity metrics, skills analytics & integrations")
+
     advanced = AdvancedATS()
     
     adv_tab1, adv_tab2, adv_tab3, adv_tab4, adv_tab5, adv_tab6 = st.tabs([
@@ -1719,13 +1990,9 @@ if st.session_state.results:
         st.subheader("❓ AI-Generated Interview Questions")
         st.write("Tailored interview questions based on each candidate's profile and skill gaps.")
         
-        interview_candidate = st.selectbox(
-            "Select candidate for interview prep:",
-            options=[r['filename'] for r in results_sorted],
-            key="interview_selector"
-        )
-        
-        interview_result = next((r for r in results_sorted if r['filename'] == interview_candidate), None)
+        _iv_opts = [_candidate_name(r['filename']) for r in results_sorted]
+        _iv_sel  = st.selectbox("Select candidate for interview prep:", options=_iv_opts, key="interview_selector")
+        interview_result = results_sorted[_iv_opts.index(_iv_sel)] if _iv_sel in _iv_opts else None
         
         if interview_result:
             questions = advanced.generate_interview_questions(interview_result, num_questions=6)
@@ -1739,7 +2006,7 @@ if st.session_state.results:
             st.download_button(
                 label="📥 Download Interview Questions",
                 data=questions_text,
-                file_name=f"Interview_Questions_{Path(interview_candidate).stem}_{datetime.now().strftime('%Y%m%d')}.txt",
+                file_name=f"Interview_Questions_{_iv_sel.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.txt",
                 mime="text/plain",
                 use_container_width=True
             )
@@ -1863,7 +2130,7 @@ if st.session_state.results:
         for result in results_sorted[:10]:
             prediction = advanced.calculate_predictive_success_score(result)
             predictive_data.append({
-                'Candidate': result['filename'][:30],
+                'Candidate': _candidate_name(result['filename']),
                 'Actual Score': result['final_score'],
                 'Predictive Score': prediction['predictive_score'],
                 'Success Likelihood': prediction['success_likelihood'],
@@ -1877,13 +2144,9 @@ if st.session_state.results:
         st.divider()
         st.markdown("#### Detailed Prediction Analysis")
         
-        pred_candidate = st.selectbox(
-            "Select candidate for detailed prediction:",
-            options=[r['filename'] for r in results_sorted],
-            key="prediction_selector"
-        )
-        
-        pred_result = next((r for r in results_sorted if r['filename'] == pred_candidate), None)
+        _pd_opts = [_candidate_name(r['filename']) for r in results_sorted]
+        _pd_sel  = st.selectbox("Select candidate for detailed prediction:", options=_pd_opts, key="prediction_selector")
+        pred_result = results_sorted[_pd_opts.index(_pd_sel)] if _pd_sel in _pd_opts else None
         
         if pred_result:
             prediction = advanced.calculate_predictive_success_score(pred_result)
@@ -1905,13 +2168,9 @@ if st.session_state.results:
         st.subheader("💬 Personalized Candidate Feedback")
         st.write("AI-generated personalized feedback for each candidate.")
         
-        feedback_candidate = st.selectbox(
-            "Select candidate for personalized feedback:",
-            options=[r['filename'] for r in results_sorted],
-            key="feedback_selector"
-        )
-        
-        feedback_result = next((r for r in results_sorted if r['filename'] == feedback_candidate), None)
+        _fb_opts = [_candidate_name(r['filename']) for r in results_sorted]
+        _fb_sel  = st.selectbox("Select candidate for personalized feedback:", options=_fb_opts, key="feedback_selector")
+        feedback_result = results_sorted[_fb_opts.index(_fb_sel)] if _fb_sel in _fb_opts else None
         
         if feedback_result:
             feedback = advanced.generate_personalized_feedback(feedback_result)
@@ -1934,7 +2193,7 @@ if st.session_state.results:
             
             # Generate feedback email
             st.divider()
-            feedback_email = f"""Dear {Path(feedback_candidate).stem},
+            feedback_email = f"""Dear {_fb_sel},
 
 Thank you for your interest in our position!
 
@@ -1956,7 +2215,7 @@ The Hiring Team
             st.download_button(
                 label="📧 Download Feedback Email",
                 data=feedback_email,
-                file_name=f"Feedback_{Path(feedback_candidate).stem}_{datetime.now().strftime('%Y%m%d')}.txt",
+                file_name=f"Feedback_{_fb_sel.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.txt",
                 mime="text/plain",
                 use_container_width=True
             )
@@ -2067,13 +2326,9 @@ The Hiring Team
     # Individual report selector
     st.markdown("### 🔍 Browse Individual Candidate Reports")
     
-    selected_candidate = st.selectbox(
-        "Select candidate for detailed report:",
-        options=[r['filename'] for r in results_sorted],
-        key="report_selector"
-    )
-    
-    selected_result = next((r for r in results_sorted if r['filename'] == selected_candidate), None)
+    _rpt_opts = [_candidate_name(r['filename']) for r in results_sorted]
+    _rpt_sel  = st.selectbox("Select candidate for detailed report:", options=_rpt_opts, key="report_selector")
+    selected_result = results_sorted[_rpt_opts.index(_rpt_sel)] if _rpt_sel in _rpt_opts else None
     
     if selected_result:
         detailed_report_text = report_gen.generate_detailed_candidate_report(selected_result)
@@ -2086,9 +2341,9 @@ The Hiring Team
                 value=detailed_report_text,
                 height=400,
                 disabled=True,
-                key="report_preview_area"
+                key=f"report_preview_{_rpt_sel}",
             )
-        
+
         with col2:
             try:
                 pdf_individual = report_gen.generate_individual_pdf_report(selected_result)
@@ -2098,18 +2353,18 @@ The Hiring Team
                     file_name=f"ATS_Detailed_{Path(selected_result['filename']).stem}_{datetime.now().strftime('%Y%m%d')}.pdf",
                     mime="application/pdf",
                     use_container_width=True,
-                    key="individual_pdf_download"
+                    key=f"dl_pdf_{_rpt_sel}",
                 )
             except Exception as e:
                 st.error(f"PDF error: {str(e)[:30]}")
-            
+
             st.download_button(
                 label=f"📝 Text",
                 data=detailed_report_text,
                 file_name=f"ATS_Detailed_{Path(selected_result['filename']).stem}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
                 mime="text/plain",
                 use_container_width=True,
-                key="individual_txt_download"
+                key=f"dl_txt_{_rpt_sel}",
             )
         
         with col3:
