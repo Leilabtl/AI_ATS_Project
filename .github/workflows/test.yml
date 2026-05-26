@@ -23,7 +23,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run tests
-        run: pytest tests/ test_threshold_selection.py -v
+        run: python -m pytest tests/ test_threshold_selection.py -v
 
   # ── Job 2: build & publish Docker image (push to main only) ──────────────
   docker:
