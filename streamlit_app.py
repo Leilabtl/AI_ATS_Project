@@ -370,6 +370,56 @@ tab_job, tab_pool, tab_analytics, tab_settings = st.tabs(["Job Setup", "Candidat
 with tab_job:
         st.session_state.selected_sidebar_tab = "Job Setup"
 
+        # ── First-time onboarding guide (shown only when no results exist) ────
+        if not st.session_state.get("results"):
+            st.markdown("""
+            <div style="background:linear-gradient(135deg,#eef2ff 0%,#f0f9ff 100%);
+                        border:1px solid #c7d2fe;border-radius:14px;padding:24px 28px;
+                        margin-bottom:28px;">
+                <div style="font-size:18px;font-weight:700;color:#312e81;margin-bottom:6px;">
+                    👋 Welcome to HR Compass
+                </div>
+                <div style="font-size:13px;color:#4338ca;margin-bottom:18px;">
+                    Screen your first candidates in three steps:
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+                    <div style="background:white;border-radius:10px;padding:16px;
+                                border:1px solid #e0e7ff;text-align:center;">
+                        <div style="font-size:24px;margin-bottom:8px;">1️⃣</div>
+                        <div style="font-weight:600;color:#1e1b4b;font-size:13px;margin-bottom:4px;">
+                            Pick a Role
+                        </div>
+                        <div style="font-size:12px;color:#6b7280;">
+                            Select the job title from the dropdown below. The job description auto-fills — edit it to match your exact requirements.
+                        </div>
+                    </div>
+                    <div style="background:white;border-radius:10px;padding:16px;
+                                border:1px solid #e0e7ff;text-align:center;">
+                        <div style="font-size:24px;margin-bottom:8px;">2️⃣</div>
+                        <div style="font-weight:600;color:#1e1b4b;font-size:13px;margin-bottom:4px;">
+                            Upload CVs
+                        </div>
+                        <div style="font-size:12px;color:#6b7280;">
+                            Drag and drop PDF CVs (1–500 files). The AI screens all of them automatically — fast keyword match first, then deep GPT analysis.
+                        </div>
+                    </div>
+                    <div style="background:white;border-radius:10px;padding:16px;
+                                border:1px solid #e0e7ff;text-align:center;">
+                        <div style="font-size:24px;margin-bottom:8px;">3️⃣</div>
+                        <div style="font-weight:600;color:#1e1b4b;font-size:13px;margin-bottom:4px;">
+                            Review & Export
+                        </div>
+                        <div style="font-size:12px;color:#6b7280;">
+                            Ranked results appear below. Export a PDF report, CSV, or email templates for your shortlist — all in one click.
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:#6366f1;margin-top:14px;text-align:center;">
+                    💡 Tip: No API key? The keyword matching layer still works fully — GPT analysis is optional.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
         # ── Role title (searchbox autocomplete) ───────────────────────────────
         saved_roles   = load_saved_job_titles()
         custom_roles  = sorted([r for r in saved_roles if r not in ROLES], key=str.lower)
@@ -444,11 +494,30 @@ with tab_job:
             uploaded_files = st.file_uploader(
                 "📤 Upload CVs (PDF)",
                 type="pdf",
-                accept_multiple_files=True
+                accept_multiple_files=True,
+                help="Drag & drop PDF files here, or click Browse. Accepts 1–500 files. Scanned/image PDFs may not parse correctly.",
             )
-            process_button = st.button("🚀 Analyze Candidates", type="primary", use_container_width=True)
+            _n_files = len(uploaded_files) if uploaded_files else 0
+            if _n_files > 0:
+                st.caption(f"✅ {_n_files} file{'s' if _n_files != 1 else ''} ready — click Analyze to start.")
+            process_button = st.button(
+                "🚀 Analyze Candidates",
+                type="primary",
+                use_container_width=True,
+                disabled=_n_files == 0,
+                help="Run Phase 1 keyword pre-screening on all uploaded CVs, then Phase 2 GPT analysis on the best matches (requires API key).",
+            )
         else:
-            st.info("Select a role title above to continue.", icon="👆")
+            st.markdown("""
+            <div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;
+                        padding:24px;text-align:center;color:#64748b;margin-top:8px;">
+                <div style="font-size:32px;margin-bottom:8px;">☝️</div>
+                <div style="font-weight:600;font-size:14px;color:#374151;">Select a role to continue</div>
+                <div style="font-size:12px;margin-top:4px;">
+                    Choose a job title from the dropdown above — the job description will auto-fill and you can then upload CVs.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
     
 with tab_analytics:
     _analytics_results = st.session_state.get("results") or []
@@ -1119,6 +1188,20 @@ if st.session_state.results:
                 render_gpt_card(llm)
             elif result.get('strategic_summary'):
                 render_keyword_summary_card(result['strategic_summary'])
+
+            # Live streaming summary button (only when analyzer is available + cv text present)
+            _stream_analyzer = st.session_state.get('llm_analyzer')
+            _cv_txt = result.get('cv_text', '')
+            if _stream_analyzer and _cv_txt:
+                if st.button(
+                    "⚡ Stream Live AI Summary",
+                    key=f"stream_live_{idx}",
+                    help="Generate a quick executive summary streamed live, token by token",
+                ):
+                    st.markdown("**Live AI Executive Summary:**")
+                    st.write_stream(
+                        _stream_analyzer.stream_executive_summary(_cv_txt, job_description, result)
+                    )
 
             # 2. Score gauge + breakdown
             final_score = result['final_score']

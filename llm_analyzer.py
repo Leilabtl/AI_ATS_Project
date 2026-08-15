@@ -17,7 +17,9 @@ import json
 import os
 import re
 import time
+import uuid
 import logging
+from datetime import datetime, timezone
 from openai import OpenAI, APIError, AuthenticationError, RateLimitError
 
 logger = logging.getLogger(__name__)
@@ -87,6 +89,15 @@ _INJECTION_PATTERNS = [
 ]
 _INJECTION_RE = re.compile("|".join(_INJECTION_PATTERNS), re.IGNORECASE)
 
+# PII patterns checked before every API call; matches are logged (not sent to OpenAI)
+_PII_PATTERNS = [
+    (re.compile(r'\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b'), "EMAIL"),
+    (re.compile(r'\b(?:\+?358|0)[\s\-]?\d{1,3}[\s\-]?\d{3,4}[\s\-]?\d{3,5}\b'), "PHONE"),
+    (re.compile(r'\b\d{6}[+\-A]\d{3}[0-9A-FHJK-NPR-Y]\b'), "FIN_SSN"),
+]
+
+_AUDIT_LOG_PATH = "ats_audit.log"
+
 
 class LLMAnalyzer:
     """Wraps the OpenAI Chat Completions API for deep candidate analysis."""
@@ -117,23 +128,40 @@ class LLMAnalyzer:
         Retries once automatically when the model returns malformed JSON or
         an output that fails schema validation.
         """
+        correlation_id = str(uuid.uuid4())[:8]
+        logger.info("[%s] Starting GPT analysis", correlation_id)
         self._validate_input_sizes(cv_text, job_description)
+
+        pii_types = self._detect_pii(cv_text)
+        if pii_types:
+            logger.info("[%s] PII detected before API call: %s", correlation_id, pii_types)
+
         clean_cv = self._sanitize_input(cv_text)
         prompt = self._build_prompt(clean_cv, job_description, pre_analysis)
+        tokens_before = self.total_tokens_used
 
         for attempt in range(2):
-            raw = self._call_api(prompt)
+            raw = self._call_api(prompt, correlation_id)
             if raw is None:
                 break
             parsed = self._parse_json(raw)
             if parsed and self._validate_output(parsed):
+                self._audit_log(
+                    correlation_id=correlation_id,
+                    cv_name=pre_analysis.get("cv_name", "unknown"),
+                    tokens=self.total_tokens_used - tokens_before,
+                    recommendation=parsed.get("interview_recommendation", "unknown"),
+                    pii_detected=bool(pii_types),
+                )
+                logger.info("[%s] Analysis complete — %s", correlation_id, parsed.get("interview_recommendation"))
                 return parsed
-            logger.warning("GPT response failed validation on attempt %d — retrying", attempt + 1)
+            logger.warning("[%s] Response failed validation on attempt %d — retrying", correlation_id, attempt + 1)
 
+        logger.error("[%s] Analysis failed after 2 attempts", correlation_id)
         return None
 
     def validate_key(self) -> bool:
-        """Return True if the API key is accepted by OpenAI."""
+        """Return True if the API key is accepted by OpenAI (including quota-exceeded accounts)."""
         try:
             self._client.chat.completions.create(
                 model=self.MODEL,
@@ -141,7 +169,10 @@ class LLMAnalyzer:
                 max_tokens=5,
             )
             return True
-        except (AuthenticationError, APIError):
+        except RateLimitError:
+            # 429 means the key is valid but the account quota is exhausted
+            return True
+        except AuthenticationError:
             return False
         except Exception:
             return False
@@ -153,7 +184,7 @@ class LLMAnalyzer:
 
     # ── Private helpers ───────────────────────────────────────────────────────
 
-    def _call_api(self, user_prompt: str) -> str | None:
+    def _call_api(self, user_prompt: str, correlation_id: str = "") -> str | None:
         """Make one API call with rate-limiting guard. Returns raw text, or None on failure."""
         elapsed = time.monotonic() - self._last_call_time
         if elapsed < self._MIN_CALL_INTERVAL:
@@ -172,17 +203,18 @@ class LLMAnalyzer:
             usage = resp.usage
             if usage:
                 self.total_tokens_used += usage.total_tokens
+                logger.debug("[%s] API call used %d tokens", correlation_id, usage.total_tokens)
             self.total_api_calls += 1
             self._last_call_time = time.monotonic()
             return resp.choices[0].message.content
         except RateLimitError:
-            logger.error("OpenAI rate limit hit")
+            logger.error("[%s] OpenAI rate limit hit", correlation_id)
             return None
         except AuthenticationError:
-            logger.error("OpenAI authentication failed — check API key")
+            logger.error("[%s] OpenAI authentication failed — check API key", correlation_id)
             return None
         except APIError as exc:
-            logger.error("OpenAI API error: %s", exc)
+            logger.error("[%s] OpenAI API error: %s", correlation_id, exc)
             return None
 
     def _build_prompt(
@@ -242,6 +274,83 @@ class LLMAnalyzer:
             return False
         return True
 
+    @staticmethod
+    def _detect_pii(text: str) -> list[str]:
+        """Return list of PII type labels found in text (for audit logging only)."""
+        found = []
+        for pattern, label in _PII_PATTERNS:
+            if pattern.search(text):
+                found.append(label)
+        return found
+
+    def _audit_log(
+        self,
+        correlation_id: str,
+        cv_name: str,
+        tokens: int,
+        recommendation: str,
+        pii_detected: bool,
+    ) -> None:
+        """Append one JSON-lines audit record per AI interaction to ats_audit.log."""
+        record = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "correlation_id": correlation_id,
+            "cv_name": cv_name,
+            "model": self.MODEL,
+            "tokens": tokens,
+            "cost_usd": round(tokens / 1_000_000 * 0.15, 6),
+            "recommendation": recommendation,
+            "pii_detected": pii_detected,
+            "prompt_version": PROMPT_VERSION,
+        }
+        try:
+            with open(_AUDIT_LOG_PATH, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(record) + "\n")
+        except OSError as exc:
+            logger.warning("Audit log write failed: %s", exc)
+
+    def stream_executive_summary(
+        self, cv_text: str, job_description: str, pre_analysis: dict
+    ):
+        """Yield text tokens for a live executive summary using OpenAI streaming."""
+        elapsed = time.monotonic() - self._last_call_time
+        if elapsed < self._MIN_CALL_INTERVAL:
+            time.sleep(self._MIN_CALL_INTERVAL - elapsed)
+
+        clean_cv = self._sanitize_input(cv_text[: self.MAX_CV_CHARS])
+        matched = list(pre_analysis.get("matched_skills", {}).keys())[:6]
+        missing = list(pre_analysis.get("missing_skills", {}).keys())[:4]
+
+        prompt = (
+            f"Role: {job_description[:500]}\n"
+            f"CV excerpt: {clean_cv[:1500]}\n"
+            f"Matched skills: {', '.join(matched) or 'none'}\n"
+            f"Skill gaps: {', '.join(missing) or 'none'}\n"
+            f"Phase-1 score: {pre_analysis.get('skills_match', 0):.0f}%\n\n"
+            "Write a 3-sentence executive summary for a recruiter. "
+            "Reference specific details from the CV. Be concise and direct."
+        )
+
+        try:
+            stream = self._client.chat.completions.create(
+                model=self.MODEL,
+                temperature=0.3,
+                max_tokens=200,
+                stream=True,
+                messages=[
+                    {"role": "system", "content": "You are an expert HR analyst. Be specific and concise."},
+                    {"role": "user", "content": prompt},
+                ],
+            )
+            for chunk in stream:
+                delta = chunk.choices[0].delta
+                if delta.content:
+                    yield delta.content
+            self.total_api_calls += 1
+            self._last_call_time = time.monotonic()
+        except Exception as exc:
+            logger.error("Streaming failed: %s", exc)
+            yield f"[Streaming unavailable: {exc}]"
 
     def generate_market_intelligence(
         self, results: list[dict], job_title: str, job_description: str
