@@ -142,13 +142,13 @@ Your app now supports these export formats:
 5. Track all in your email client
 ```
 
-### Scenario 3: Academic Grading
+### Scenario 3: Talent Pool Review
 ```
-1. Upload 50+ student resumes
-2. For a job position
-3. System ranks them automatically
-4. Export PDF to show results
-5. Use for grading/feedback
+1. Upload 50+ CVs for a given role
+2. System ranks all candidates automatically
+3. Review the ranked list and detailed breakdowns
+4. Export PDF report or CSV for stakeholders
+5. Use email templates to notify each category
 ```
 
 ---
@@ -207,10 +207,10 @@ Your app now supports these export formats:
 
 ---
 
-## 🎓 Perfect For
+## ✅ Use Cases
 
 - ✅ Professional HR recruiting
-- ✅ Academic/course assignments
+- ✅ Talent acquisition pipelines
 - ✅ Large batch candidate screening
 - ✅ Professional communication
 - ✅ Batch email campaigns

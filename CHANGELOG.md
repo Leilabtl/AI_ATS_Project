@@ -5,7 +5,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [Unreleased] — Grade-5 Improvements
+## [2.0.0] — 2026-08-15
 
 ### Added
 - **Correlation IDs** — every `analyze_candidate()` call generates a UUID-based

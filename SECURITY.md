@@ -7,7 +7,7 @@ procedures for the HR Compass AI Applicant Tracking System.
 
 ## Scope
 
-HR Compass is a Streamlit-based prototype for AI-assisted CV screening. It handles:
+HR Compass is a Streamlit-based application for AI-assisted CV screening. It handles:
 - **Uploaded CV files** (PDFs containing personal data of job applicants)
 - **OpenAI API calls** (sending CV excerpts to a third-party LLM service)
 - **Candidate pool data** (persisted locally as `candidate_pool.json`)

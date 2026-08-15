@@ -1061,7 +1061,7 @@ if process_button and job_title and job_description and uploaded_files:
         longlist_count=st.session_state.get('longlist_count', 200),
     )
     
-    # Summary of assignment
+    # Pool assignment results summary
     st.markdown(f"""
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
         <div class="metric-card">

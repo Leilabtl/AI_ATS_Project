@@ -4,7 +4,6 @@ An AI-powered Applicant Tracking System (ATS) that combines a fast **keyword pre
 with a **GPT-4o-mini semantic deep analysis layer** to rank candidates, detect bias, and generate
 professional recruitment reports.
 
-> **Course:** AI In Practice · XAMK · Spring 2026
 > **Developer:** Leila Baratlou
 > **Version:** 2.5.0 | **Status:** Fully Operational
 

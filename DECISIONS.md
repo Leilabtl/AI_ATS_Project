@@ -40,7 +40,7 @@ Use **GPT-4o-mini** via the `openai` Python SDK.
 1. User already had an active OpenAI API key.
 2. GPT-4o-mini offers a strong quality/cost balance ($0.15 / 1M input tokens vs $2.50 for GPT-4o).
 3. JSON mode (`response_format={"type":"json_object"}`) guarantees parseable structured output — eliminates the need to strip markdown fences.
-4. The openai SDK is mature, well-documented, and already the de-facto standard for course-level AI projects.
+4. The openai SDK is mature, well-documented, and the de-facto standard for production AI projects.
 
 ### Consequences
 - **Pro:** Reliable JSON output, low cost.
@@ -122,7 +122,7 @@ CV text is untrusted user input. A malicious applicant could embed jailbreak ins
 **Date:** 2025-12
 
 ### Context
-The project is a course prototype, not a production SaaS. Options considered: Flask + React, FastAPI + React, Streamlit.
+HR Compass is a single-user web application targeting fast deployment, not a multi-tenant production SaaS. Options considered: Flask + React, FastAPI + React, Streamlit.
 
 ### Decision
 Use **Streamlit** for the entire frontend and server.
@@ -152,7 +152,7 @@ Use a single `candidate_pool.json` flat file managed by `candidate_pool.py`.
 
 ### Reasons
 - Zero external dependencies (no database server to provision).
-- Sufficient for a single-user prototype.
+- Sufficient for a single-user deployment.
 - Human-readable for debugging.
 
 ### Consequences
@@ -215,7 +215,7 @@ Full details and response procedures: see [SECURITY.md](SECURITY.md).
 - **Pro:** Demonstrates compliance awareness aligned with EU AI Act principles.
 - **Pro:** Audit log enables post-hoc fairness analysis (e.g., decline rate by seniority level).
 - **Con:** Regex-based bias detection and PII matching produce false positives on some texts.
-- **Con:** Full GDPR compliance for a production deployment would additionally require data minimisation, right-to-erasure workflows, and a Data Protection Impact Assessment — out of scope for this prototype.
+- **Con:** Full GDPR compliance for a production deployment would additionally require data minimisation, right-to-erasure workflows, and a Data Protection Impact Assessment — documented as a known limitation and planned for a future release.
 
 ---
 
@@ -248,6 +248,6 @@ Seven cost controls are layered across the pipeline:
 - **Total per session: < $0.002**
 
 ### Consequences
-- **Pro:** Negligible cost per session; entire course project likely under $0.10.
+- **Pro:** Negligible cost per session; the full development and testing period is likely under $0.10 total.
 - **Pro:** Cost is visible to the user in real time, building trust.
 - **Con:** Input truncation may drop relevant content from very long CVs (see ADR-008).
