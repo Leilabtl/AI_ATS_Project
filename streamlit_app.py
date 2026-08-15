@@ -1,3 +1,33 @@
+"""
+HR Compass — main application entry point.
+
+Renders the Streamlit UI and orchestrates the full candidate screening
+workflow. The application is structured around four tabs:
+
+  Job Setup      Role selection, job description editing, CV upload,
+                 batch analysis trigger, and ranked results display.
+  Candidate Pool Persistent multi-job candidate pool with per-category
+                 views (shortlist / longlist / rejected) and CSV export.
+  Analytics      Plotly charts: score distribution, seniority breakdown,
+                 top matched skills. GPT market intelligence report.
+  Settings       Scoring mode (ranking vs threshold), threshold sliders,
+                 OpenAI API key configuration and live cost display.
+
+UX design decisions
+-------------------
+  Progressive disclosure  The 3-step onboarding card is shown only until
+                          the first analysis run completes, then hidden.
+  Contextual help         Every non-obvious control has a help= tooltip.
+  Graceful degradation    GPT analysis is optional; the full Phase 1
+                          keyword pipeline runs without an API key.
+  Streaming feedback      The ⚡ Stream Live AI Summary button streams
+                          token-by-token output so the recruiter sees
+                          results immediately rather than waiting for the
+                          full response.
+
+All heavy processing (PDF parsing, matching, LLM calls) is delegated to
+pipeline.py, keeping this file focused on UI concerns only.
+"""
 import streamlit as st
 from matcher import EnhancedMatcher
 from report_generator import ReportGenerator

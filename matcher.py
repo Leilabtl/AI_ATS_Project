@@ -1,3 +1,33 @@
+"""
+Phase 1 candidate matching — keyword extraction, scoring, and bias detection.
+
+EnhancedMatcher wraps SemanticMatcher (TF-IDF cosine similarity) and adds:
+
+  Scoring formula
+  ---------------
+  Final score = weighted sum of six factors:
+    0.35 × TF-IDF similarity (word overlap weighted by term importance)
+    0.25 × Skills match rate (exact keyword hits against JD)
+    0.15 × Experience relevance (heuristic keyword rules)
+    0.15 × Keyword density (term concentration in CV)
+    0.05 × Culture fit (soft-skill keyword presence)
+    0.05 × Seniority alignment (detected vs required level)
+
+  Why keyword matching for Phase 1?
+  ----------------------------------
+  Zero API cost, deterministic, fully explainable — every score component
+  can be traced to specific token matches. Sufficient as a cheap first
+  filter: a CV with no overlap with the JD is genuinely not a match.
+  Synonym gaps (e.g. "ML engineer" vs "machine learning specialist") are
+  addressed by Phase 2 (LLMAnalyzer).
+
+  Bias detection
+  --------------
+  detect_bias() scans CV text for gendered language and age-signalling
+  terms. It warns the recruiter rather than penalising the candidate,
+  in line with EU AI Act transparency requirements for high-risk AI
+  systems used in employment screening.
+"""
 import logging
 import re
 
