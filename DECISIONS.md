@@ -164,3 +164,64 @@ CV text is hard-capped at **4 000 characters** and job description at **2 000 ch
 ### Consequences
 - **Pro:** Predictable per-call cost ceiling.
 - **Con:** Very long CVs (portfolios, academic CVs) lose content beyond 4 000 chars. A smarter approach would extract structured sections (experience, skills) before truncating.
+
+---
+
+## ADR-009: Ethical AI Design
+
+**Status:** Accepted  
+**Date:** 2026-08
+
+### Context
+AI-assisted hiring tools can perpetuate or amplify human bias. The EU AI Act classifies employment screening tools as **high-risk AI systems**, requiring transparency, human oversight, and non-discrimination measures. Even at course-project scale, demonstrating awareness of these risks is essential.
+
+### Decision
+The following ethical safeguards are implemented across the pipeline:
+
+1. **Bias detection** — `EnhancedMatcher.detect_bias()` scans CV text for gendered pronouns and age-signalling language, warning the recruiter rather than silently penalising candidates.
+2. **PII detection before API calls** — `LLMAnalyzer._detect_pii()` checks for emails, phone numbers, and Finnish personal identity codes (hetu) before any text is sent to OpenAI. Detections are logged to the audit file; they are not redacted from the CV (which would damage matching quality) but their presence is recorded.
+3. **Audit trail** — `_audit_log()` writes one JSON line per AI interaction containing timestamp, correlation ID, model version, token count, recommendation, and whether PII was present. This provides a tamper-evident record for post-hoc review.
+4. **Explainability** — The GPT response schema requires explicit `key_strengths`, `critical_gaps`, and `career_fit_narrative` fields. Recruiters see the reasoning, not just a score.
+5. **Human-in-the-loop** — The system produces recommendations (`Shortlist`, `Consider`, `Decline`), not autonomous decisions. Every candidate's full expander is visible and a recruiter must act on the recommendation.
+6. **Prompt injection protection** — `_sanitize_input()` blocks known jailbreak patterns so a malicious CV cannot manipulate the model's output for other candidates.
+
+### Consequences
+- **Pro:** Demonstrates compliance awareness aligned with EU AI Act principles.
+- **Pro:** Audit log enables post-hoc fairness analysis (e.g., decline rate by seniority level).
+- **Con:** Regex-based bias detection and PII matching produce false positives on some texts.
+- **Con:** Full GDPR compliance for a production deployment would additionally require data minimisation, right-to-erasure workflows, and a Data Protection Impact Assessment — out of scope for this prototype.
+
+---
+
+## ADR-010: Cost Analysis and Controls
+
+**Status:** Accepted  
+**Date:** 2026-08
+
+### Context
+OpenAI API calls are metered. With 50–500 CVs per batch and GPT-4o-mini at $0.15 / 1M tokens, uncontrolled usage could produce unexpectedly high bills during a demo or stress test.
+
+### Decision
+Seven cost controls are layered across the pipeline:
+
+| Control | Where | Effect |
+|---|---|---|
+| Phase 1 pre-screen | `matcher.py` | Only shortlisted candidates proceed to Phase 2 |
+| Input truncation | `_build_prompt()` | CV capped at 4 000 chars, JD at 2 000 chars |
+| Streaming uses lower `max_tokens` | `stream_executive_summary()` | 200 tokens vs 1 024 for full analysis |
+| Rate limiting | `_call_api()` | 0.5 s minimum between calls prevents accidental burst |
+| Per-session cost tracker | `estimated_cost_usd` property | Displayed in UI sidebar so recruiter sees running total |
+| Per-call cost in audit log | `_audit_log()` | Records `cost_usd` for post-session accounting |
+| Market intelligence is one call | `generate_market_intelligence()` | Aggregates all candidates in one prompt rather than N calls |
+
+### Cost Estimate (typical session)
+- 20 CVs submitted, 8 pass Phase 1 threshold → 8 GPT calls
+- ~900 tokens per call (prompt + completion) × 8 = 7 200 tokens
+- Cost: 7 200 / 1 000 000 × $0.15 ≈ **$0.001** per session
+- Market intelligence call: ~800 tokens ≈ $0.00012
+- **Total per session: < $0.002**
+
+### Consequences
+- **Pro:** Negligible cost per session; entire course project likely under $0.10.
+- **Pro:** Cost is visible to the user in real time, building trust.
+- **Con:** Input truncation may drop relevant content from very long CVs (see ADR-008).

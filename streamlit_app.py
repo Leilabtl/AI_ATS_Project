@@ -1120,6 +1120,20 @@ if st.session_state.results:
             elif result.get('strategic_summary'):
                 render_keyword_summary_card(result['strategic_summary'])
 
+            # Live streaming summary button (only when analyzer is available + cv text present)
+            _stream_analyzer = st.session_state.get('llm_analyzer')
+            _cv_txt = result.get('cv_text', '')
+            if _stream_analyzer and _cv_txt:
+                if st.button(
+                    "⚡ Stream Live AI Summary",
+                    key=f"stream_live_{idx}",
+                    help="Generate a quick executive summary streamed live, token by token",
+                ):
+                    st.markdown("**Live AI Executive Summary:**")
+                    st.write_stream(
+                        _stream_analyzer.stream_executive_summary(_cv_txt, job_description, result)
+                    )
+
             # 2. Score gauge + breakdown
             final_score = result['final_score']
             confidence = result.get('confidence_level', '')
