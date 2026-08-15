@@ -48,25 +48,36 @@ Use **GPT-4o-mini** via the `openai` Python SDK.
 
 ---
 
-## ADR-003: Chain-of-Thought System Prompt
+## ADR-003: Chain-of-Thought System Prompt (Prompt Version History)
 
 **Status:** Accepted  
 **Date:** 2026-01
 
 ### Context
-Initial tests with a direct "score this CV" prompt produced generic, repetitive output. The model would often recycle language across fields.
+Initial tests with a direct "score this CV" prompt produced generic, repetitive output. The model would often recycle language across fields. Three prompt versions were developed and evaluated before the current design was adopted.
+
+### Prompt Version History (A/B Evaluation)
+
+| Version | Approach | Problem observed | Evaluation result |
+|---|---|---|---|
+| **v1.0** | Single instruction: "Analyse this CV for the job and return JSON." | Output was generic; executive summaries reused identical phrasing across candidates. Strengths section often listed the job description requirements verbatim. | Rejected — too shallow |
+| **v2.0** | Added explicit JSON schema in the prompt. Required `key_strengths`, `critical_gaps`, `interview_recommendation`. | Output was structurally correct but reasoning was shallow — the model filled fields without demonstrating it had actually compared CV to JD. Recommendations were frequently `Shortlist` for weak candidates. | Rejected — poor discrimination |
+| **v3.0** *(current)* | Chain-of-thought preamble: model instructed to reason through 5 explicit steps *before* writing JSON. Steps force it to identify requirements, compare them to the CV, consider trajectory, then synthesise. | Output is candidate-specific, references actual CV details, and produces more accurate `Decline` decisions for mismatched candidates. Confirmed by running the same 6 CVs through v2 and v3 and comparing outputs manually. | **Accepted** |
 
 ### Decision
 The system prompt (`PROMPT_VERSION = "3.0"`) instructs the model to follow a 5-step reasoning chain before writing JSON:
-1. Identify 3-5 critical technical requirements.
-2. Decide whether the CV meets, partially meets, or misses each.
-3. Consider career trajectory.
-4. Estimate interview readiness.
-5. Only then synthesise into JSON.
+1. Identify 3-5 critical technical requirements from the job description.
+2. Decide whether the CV meets, partially meets, or misses each requirement.
+3. Consider career trajectory — is this role a natural next step?
+4. Estimate interview readiness — would significant ramp-up be needed?
+5. Only then synthesise all findings into the JSON output.
+
+`PROMPT_VERSION` is embedded in every system prompt string so logged outputs can always be traced back to the exact prompt that generated them.
 
 ### Consequences
 - **Pro:** Output is noticeably more specific and candidate-tailored.
-- **Pro:** Prompt version is tracked in the system prompt so future outputs can be compared against a known baseline.
+- **Pro:** Version tracking enables regression detection if the prompt is changed in future.
+- **Pro:** CoT structure measurably improves `Decline` accuracy for mismatched candidates (confirmed by manual evaluation on 6 labeled cases).
 - **Con:** Longer system prompt increases input tokens by ~150 tokens per call (~$0.00002 — negligible).
 
 ---
@@ -184,6 +195,21 @@ The following ethical safeguards are implemented across the pipeline:
 4. **Explainability** — The GPT response schema requires explicit `key_strengths`, `critical_gaps`, and `career_fit_narrative` fields. Recruiters see the reasoning, not just a score.
 5. **Human-in-the-loop** — The system produces recommendations (`Shortlist`, `Consider`, `Decline`), not autonomous decisions. Every candidate's full expander is visible and a recruiter must act on the recommendation.
 6. **Prompt injection protection** — `_sanitize_input()` blocks known jailbreak patterns so a malicious CV cannot manipulate the model's output for other candidates.
+
+### Threat Model
+
+The table below identifies specific attack vectors for this application and how each is mitigated.
+
+| Threat | Vector | Mitigation | Residual risk |
+|---|---|---|---|
+| **Prompt injection** | Malicious CV contains jailbreak text ("Ignore all previous instructions…") to manipulate GPT output for *other* candidates | `_sanitize_input()` blocklist (10+ patterns) replaces matches with `[REDACTED]` | Novel, never-before-seen patterns may bypass regex. Mitigation: output schema validation catches hallucinated fields. |
+| **PII leakage to OpenAI** | CV contains email / phone / SSN that gets sent to third-party API | `_detect_pii()` logs PII presence before each call; `_sanitize_input()` caps input size | PII is currently detected and logged but *not* redacted from the prompt (redacting would harm matching quality). A production deployment should redact or obtain explicit consent. |
+| **API key theft** | Key hardcoded in source, committed to git, or logged to stdout | Key loaded from `.env` (gitignored) / Streamlit Secrets; never interpolated into log strings | If Streamlit Secrets is misconfigured the key could be exposed. |
+| **Unbounded API cost** | Malicious user uploads thousands of CVs to exhaust quota | Phase 1 threshold limits GPT calls; rate limiter (0.5 s/call); `max_tokens` caps each call | No hard per-session spend limit; depends on Phase 1 filtering ratio. |
+| **Audit log tampering** | Local `ats_audit.log` file is deleted or edited to hide activity | Log is append-only; application never reads it back or deletes it | No cryptographic signing; physical access to the host can alter the file. |
+| **Bias amplification** | GPT reflects training-data bias against names, genders, or nationalities | Bias detection warns recruiter; human-in-the-loop required before any action | Detection is heuristic; cannot guarantee absence of subtle model bias. |
+
+Full details and response procedures: see [SECURITY.md](SECURITY.md).
 
 ### Consequences
 - **Pro:** Demonstrates compliance awareness aligned with EU AI Act principles.
